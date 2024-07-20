@@ -140,6 +140,13 @@ class DatabaseHelper {
     ''', [id]);
   }
 
+  Future<bool> checkPlayerName(String name) async {
+    Database db = await instance.database;
+    List<Map<String, dynamic>> result =
+        await db.rawQuery('SELECT * FROM Player WHERE name = ?', [name]);
+
+    return result.isNotEmpty;
+  }
 //--------------------------------------------------------------------------------------
 //********Games Functions**********/
 //--------------------------------------------------------------------------------------
@@ -186,14 +193,9 @@ class DatabaseHelper {
   Future<bool> checkGameName(String name) async {
     Database db = await instance.database;
     List<Map<String, dynamic>> result =
-        await db.rawQuery('''SELECT * FROM Game WHERE name = ?''', [name]);
+        await db.rawQuery('SELECT * FROM Game WHERE name = ?', [name]);
 
-    if (result.isNotEmpty) {
-      Game game = Game.fromMap(result.first);
-      return true;
-    } else {
-      return false;
-    }
+    return result.isNotEmpty;
   }
 
   Future<void> updateGameName(int gameId, String newName) async {
@@ -242,7 +244,7 @@ class DatabaseHelper {
         .database; // Assuming you have a function to open your database
     int id = await db.insert('Match', match.toMap());
     debugPrint('match inserted $id');
-    for(Score score in scores){
+    for (Score score in scores) {
       score.matchId = match.id;
       debugPrint('${score.matchId} ${score.id}');
       insertScore(score);

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:scorebuddy/Models/match_model.dart';
-import 'package:scorebuddy/Screens/match_screen.dart';
 import 'dart:async';
 
 import '../Models/game_model.dart';
 import '../Models/player_model.dart';
 import '../Models/score_model.dart';
 import '../Utils/database.dart';
+import 'new_player_screen.dart';
 
 class NewMatch extends StatefulWidget {
   const NewMatch({super.key});
@@ -32,6 +32,11 @@ class NewMatchState extends State<NewMatch> {
   @override
   void initState() {
     super.initState();
+    fetchGames();
+    fetchAllPlayers();
+  }
+
+  void reload() {
     fetchGames();
     fetchAllPlayers();
   }
@@ -74,12 +79,11 @@ class NewMatchState extends State<NewMatch> {
             const SizedBox(height: 16.0),
             // Groups Dropdown
             DropdownButtonFormField<Game>(
-              icon: Icon(Icons.gamepad,
-                  color: Theme.of(context).colorScheme.primary),
+              icon: const Icon(Icons.gamepad, color: Colors.white),
               value: selectedGame,
-              hint: Text(
+              hint: const Text(
                 'Associated Group',
-                selectionColor: Theme.of(context).colorScheme.primary,
+                style: TextStyle(color: Colors.white),
               ),
               onChanged: (value) {
                 setState(() {
@@ -89,35 +93,65 @@ class NewMatchState extends State<NewMatch> {
               items: allGames.map((game) {
                 return DropdownMenuItem<Game>(
                   value: game,
-                  child: Text(game.name),
+                  child: Text(
+                    game.name,
+                    style: const TextStyle(color: Colors.white),
+                  ),
                 );
               }).toList(),
-              decoration: InputDecoration(
-                  labelText: 'Game',
-                  labelStyle:
-                      TextStyle(color: Theme.of(context).colorScheme.primary)),
+              decoration: const InputDecoration(
+                labelText: 'Game',
+                labelStyle: TextStyle(color: Colors.white),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.amber),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.amber),
+                ),
+                border: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.amber),
+                ),
+              ),
             ),
+
             const SizedBox(height: 16.0),
             // Persons Dropdown
             const SizedBox(height: 16.0),
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Checkbox(
-                  value: _selectAll,
-                  onChanged: (value) {
-                    setState(() {
-                      _selectAll = value!;
-                      if (_selectAll) {
-                        selectedPlayers = List.from(allPlayers);
-                      } else {
-                        selectedPlayers.clear();
-                      }
-                    });
-                  },
+                Row(
+                  children: [
+                    Checkbox(
+                      value: _selectAll,
+                      onChanged: (value) {
+                        setState(() {
+                          _selectAll = value!;
+                          if (_selectAll) {
+                            selectedPlayers = List.from(allPlayers);
+                          } else {
+                            selectedPlayers.clear();
+                          }
+                        });
+                      },
+                    ),
+                    Text('Select All',
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary)),
+                  ],
                 ),
-                Text('Select All',
-                    style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary)),
+                IconButton(
+                    onPressed: () {
+                      Navigator.push(context,
+                          MaterialPageRoute(builder: (context) {
+                        return const NewPlayer();
+                        reload();
+                      }));
+                    },
+                    icon: const Icon(
+                      Icons.person_add,
+                      color: Colors.white,
+                    )),
               ],
             ),
             Text(
@@ -175,7 +209,10 @@ class NewMatchState extends State<NewMatch> {
                     } catch (e) {
                       _showSnackBar(context, 'Error');
                     }
-                  } else {_showSnackBar(context, 'at least 2 players should be selected');}
+                  } else {
+                    _showSnackBar(
+                        context, 'at least 2 players should be selected');
+                  }
                 },
                 child: const Text('Save Expense'),
               ),
@@ -184,25 +221,6 @@ class NewMatchState extends State<NewMatch> {
         ),
       ),
     );
-  }
-
-  void save(Match match, List<Score> scoresList) async {
-    try {
-      await databaseHelper.insertMatchWithScores(match, scoresList);
-      debugPrint('created scores');
-    } catch (e) {
-      debugPrint('error creating match');
-    }
-  }
-
-  // Function to save the expense and return the generated expense ID
-  Future<int> createMatch(Match match) async {
-    await databaseHelper.insertMatch(match);
-
-    debugPrint(
-        'Saving expense: ${match.id}'); // Replace with actual implementation
-
-    return match.id;
   }
 
   // Function to save the debt

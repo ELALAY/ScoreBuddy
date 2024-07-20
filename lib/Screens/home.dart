@@ -152,6 +152,7 @@ class MyHomePageState extends State<MyHomePage> {
                           onPressed: (context) {
                             _showSnackbar(context, 'deleted ${match.name}');
                             deleteMatch(match);
+                            allMatches.remove(match);
                             reload();
                           },
                           borderRadius: BorderRadius.circular(12),
@@ -179,19 +180,11 @@ class MyHomePageState extends State<MyHomePage> {
                                   Text(
                                     match.name,
                                     style: const TextStyle(
-                                      fontSize: 16,
+                                      fontSize: 25,
                                       fontWeight: FontWeight.bold,
                                       color: Colors.black,
                                     ),
                                   ),
-                                  IconButton(
-                                    onPressed: () {
-                                      //createNewMatchScreen();
-                                      reload();
-                                    },
-                                    icon: const Icon(Icons.add),
-                                    color: Colors.black,
-                                  )
                                 ],
                               ),
                               const SizedBox(height: 4.0),

@@ -1,25 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:scorebuddy/Models/player_model.dart';
 import '../Utils/database.dart';
 
-class NewGame extends StatefulWidget {
-  const NewGame({super.key});
+class NewPlayer extends StatefulWidget {
+  const NewPlayer({super.key});
 
   @override
-  State<NewGame> createState() => _NewGameState();
+  State<NewPlayer> createState() => _NewPlayerState();
 }
 
-class _NewGameState extends State<NewGame> {
+class _NewPlayerState extends State<NewPlayer> {
   DatabaseHelper databaseHelper = DatabaseHelper.instance;
   TextEditingController gameNameController = TextEditingController();
 
   void createGame(String gameName) async {
-    await databaseHelper.insertGame(gameName);
+    Player player = Player(gameName);
+    await databaseHelper.insertPlayer(player);
     debugPrint(gameName);
   }
 
   // Checking for unique game names
   Future<bool> checkingName(String name) async {
-    bool exists = await databaseHelper.checkGameName(name);
+    bool exists = await databaseHelper.checkPlayerName(name);
     return exists;
   }
 
@@ -27,7 +29,7 @@ class _NewGameState extends State<NewGame> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('New Game'),
+        title: const Text('New Player'),
         titleTextStyle: const TextStyle(
           color: Colors.white,
           fontSize: 20,
@@ -51,7 +53,7 @@ class _NewGameState extends State<NewGame> {
                   border: const OutlineInputBorder(
                     borderSide: BorderSide(color: Colors.black),
                   ),
-                  labelText: 'Game name',
+                  labelText: 'Player name',
                   labelStyle:
                       TextStyle(color: Theme.of(context).colorScheme.primary),
                   enabledBorder: OutlineInputBorder(
@@ -77,7 +79,7 @@ class _NewGameState extends State<NewGame> {
                     Navigator.pop(context);
                   } else {
                     // ignore: use_build_context_synchronously
-                    _showSnackBar(context, 'Game Name Already Exists!');
+                    _showSnackBar(context, 'Player Name Already Exists!');
                   }
                 },
                 child: const Text('Create')),
