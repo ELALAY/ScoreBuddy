@@ -175,7 +175,8 @@ class NewMatchState extends State<NewMatch> {
                           gameId: game.id,
                           matchId: match.id,
                           playerId: player.id,
-                          score: 0);
+                          score: 0,
+                          won: 0);
 
                       await creatScore(score);
                     }

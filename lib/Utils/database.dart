@@ -70,11 +70,12 @@ class DatabaseHelper {
         match_id INTEGER NOT NULL,
         player_id INTEGER NOT NULL,
         score INTEGER DEFAULT 0,
+        won INTEGER NOT NULL,
         FOREIGN KEY (player_id) REFERENCES Player (id) ON DELETE CASCADE,
         FOREIGN KEY (match_id) REFERENCES Match (id) ON DELETE CASCADE,        
         FOREIGN KEY (game_id) REFERENCES Game (id) ON DELETE CASCADE
       )
-    ''');
+    ''');////-1:loss, 0: lost, 1: draw, 
 
     await db.execute('''
       INSERT INTO Game (name) VALUES ('Rami')
@@ -293,14 +294,6 @@ class DatabaseHelper {
       score.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
-  }
-
-  Future<void> addScore(int gameId, int matchId, int playerId) async {
-    Database db = await instance.database;
-    // Insert new group members for the given group ID
-    await db.rawInsert(
-        'INSERT INTO Score (game_id, match_id, player_id) VALUES (?, ?, ?)',
-        [gameId, matchId, playerId]);
   }
 
   Future<void> removeMatchMember(Score score) async {
