@@ -26,7 +26,7 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDatabase() async {
-    String path = join(await getDatabasesPath(), 'scorebuddy2.db');
+    String path = join(await getDatabasesPath(), 'scorebuddy.db');
     debugPrint('Database path: $path');
     return await openDatabase(
       path,
@@ -239,18 +239,6 @@ class DatabaseHelper {
     return id;
   }
 
-  Future<void> insertMatchWithScores(Match match, List<Score> scores) async {
-    final db = await instance
-        .database; // Assuming you have a function to open your database
-    int id = await db.insert('Match', match.toMap());
-    debugPrint('match inserted $id');
-    for (Score score in scores) {
-      score.matchId = match.id;
-      debugPrint('${score.matchId} ${score.id}');
-      insertScore(score);
-    }
-  }
-
   Future<List<Match>> getAllMatches() async {
     Database db = await instance.database;
     List<Map<String, dynamic>> result = await db.query('Match');
@@ -299,6 +287,14 @@ class DatabaseHelper {
 //********Sccores Functions**********/
 //--------------------------------------------------------------------------------------
 
+  // Update a score in the database
+  Future<void> updateScore(Score score) async {
+    final db = await instance.database;
+    await db.rawUpdate('''
+      UPDATE Score SET score = ? WHERE id = ?
+        ''', [score.score, score.id]);
+  }
+
   //add a score
   Future<void> insertScore(Score score) async {
     final db = await instance
@@ -340,5 +336,12 @@ class DatabaseHelper {
       scoresList.add(score);
     }
     return scoresList;
+  }
+
+  Future<void> deleteScores(int matchId) async {
+    Database db = await instance.database;
+    await db.rawQuery('''
+      DELETE FROM Score
+    ''', [matchId]);
   }
 }

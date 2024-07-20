@@ -13,10 +13,10 @@ class _NewPlayerState extends State<NewPlayer> {
   DatabaseHelper databaseHelper = DatabaseHelper.instance;
   TextEditingController gameNameController = TextEditingController();
 
-  void createGame(String gameName) async {
-    Player player = Player(gameName);
+  void createGame(String playerName) async {
+    Player player = Player(playerName);
     await databaseHelper.insertPlayer(player);
-    debugPrint(gameName);
+    debugPrint(playerName);
   }
 
   // Checking for unique game names

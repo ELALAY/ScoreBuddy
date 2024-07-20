@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:scorebuddy/Models/player_model.dart';
-import 'package:scorebuddy/Utils/database.dart';
+import '../Models/player_model.dart';
+import '../Utils/database.dart';
 import '../Models/match_model.dart';
 import '../Models/score_model.dart';
 
@@ -15,37 +15,42 @@ class MatchScreen extends StatefulWidget {
 class MatchScreenState extends State<MatchScreen> {
   DatabaseHelper databaseHelper = DatabaseHelper.instance;
   TextEditingController gameNameController = TextEditingController();
-  /*List<int> scores = [100, 51]; // Example scores for players
-  List<int> gamesWon = [5, 3]; // Example games won by players
-  List<String> players = ['Aymane', 'Sara']; // Example player names*/
 
   List<Score> scores = [];
   List<Player> players = [];
-  List<int> gamesWon = [];
   Map<int, int> playersWonGames = {};
+  Map<int, int> tempScores = {}; // Temporary list for scores
 
   @override
   void initState() {
     super.initState();
+    fetchAllMatchScores();
   }
 
   void fetchAllMatchScores() async {
     List<Score> scoresList = await databaseHelper.getMatchScores(widget.match.id);
     List<Player> playersList = await databaseHelper.getMatchPlayers(widget.match.id);
-    Map<int, int> playersWonGamesList = {};
+    Map<int, int> scoresTemp = {};
 
-    for(Score score in scoresList){
-      for(Player player in playersList){
-        if(score.playerId == player.id){
-          playersWonGamesList[player.id] = score.won;
+    for (Score score in scoresList) {
+      for (Player player in playersList) {
+        if (score.playerId == player.id) {
         }
       }
     }
     setState(() {
       scores = scoresList;
       players = playersList;
-      playersWonGames = playersWonGamesList;
     });
+  }
+
+  void saveScores() async {
+    // Save all scores to the database
+    for (Score score in scores) {
+      await databaseHelper.updateScore(score);
+    }
+    // ignore: use_build_context_synchronously
+    _showSnackBar(context, 'Scores saved successfully!');
   }
 
   @override
@@ -127,9 +132,10 @@ class MatchScreenState extends State<MatchScreen> {
             // Input area for adding scores
             Expanded(
               child: ListView.builder(
-                itemCount: scores.length,
+                itemCount: players.length,
                 itemBuilder: (context, index) {
                   String player = players[index].name;
+                  Score score = scores[index];
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8.0),
                     child: Row(
@@ -152,8 +158,7 @@ class MatchScreenState extends State<MatchScreen> {
                                 ),
                                 labelText: 'Add Score',
                                 labelStyle: TextStyle(
-                                    color:
-                                        Theme.of(context).colorScheme.primary),
+                                    color: Theme.of(context).colorScheme.primary),
                                 enabledBorder: OutlineInputBorder(
                                   borderSide: BorderSide(
                                       color: Theme.of(context)
@@ -169,8 +174,8 @@ class MatchScreenState extends State<MatchScreen> {
                               ),
                               onSubmitted: (value) {
                                 setState(() {
-                                  scores[index].score += int.tryParse(value) ?? 0;
-                                  scores[index].won++;
+                                  int scoreValue = int.tryParse(value) ?? 0;
+                                  score.score += scoreValue;
                                 });
                               },
                             ),
@@ -184,8 +189,10 @@ class MatchScreenState extends State<MatchScreen> {
             ),
             Center(
               child: ElevatedButton(
-                child: const Text('Score'),
-                onPressed: () {},
+                child: const Text('Save Scores'),
+                onPressed: () {
+                  saveScores();
+                },
               ),
             ),
             const SizedBox(height: 200.0,),
@@ -193,5 +200,10 @@ class MatchScreenState extends State<MatchScreen> {
         ),
       ),
     );
+  }
+
+  void _showSnackBar(BuildContext context, String message) {
+    final snackBar = SnackBar(content: Text(message));
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 }

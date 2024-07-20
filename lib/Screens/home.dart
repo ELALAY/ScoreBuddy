@@ -32,7 +32,7 @@ class MyHomePageState extends State<MyHomePage> {
   }
 
   void reload() {
-    fetchAllGames();
+    fetchAllmatches();
   }
 
   void fetchAllmatches() async {
@@ -92,6 +92,13 @@ class MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Games Score'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            color: Colors.white,
+            onPressed: (){reload();}
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(12),

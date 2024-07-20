@@ -145,7 +145,6 @@ class NewMatchState extends State<NewMatch> {
                       Navigator.push(context,
                           MaterialPageRoute(builder: (context) {
                         return const NewPlayer();
-                        reload();
                       }));
                     },
                     icon: const Icon(
