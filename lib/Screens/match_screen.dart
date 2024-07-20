@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../Models/player_model.dart';
@@ -107,7 +105,7 @@ class MatchScreenState extends State<MatchScreen> {
               }),
               headingTextStyle:
                   TextStyle(color: Theme.of(context).colorScheme.primary),
-              columns: const [
+              columns:  const [
                 DataColumn(
                   label: Text(
                     'Player',
@@ -126,15 +124,6 @@ class MatchScreenState extends State<MatchScreen> {
                     ),
                   ),
                 ),
-                DataColumn(
-                  label: Text(
-                    'Games Won',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
               ],
               rows: List<DataRow>.generate(
                 players.length,
@@ -142,16 +131,15 @@ class MatchScreenState extends State<MatchScreen> {
                   cells: [
                     DataCell(Text(players[index].name)),
                     DataCell(Text('${scores[index].score}')),
-                    DataCell(Text('${scores[index].won}')),
                   ],
                 ),
               ),
             ),
             const SizedBox(height: 20),
             // Display total score
-            const Text(
-              'Players',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            Text(
+              'Players || Target:(${widget.match.target})',
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
             // Input area for adding scores

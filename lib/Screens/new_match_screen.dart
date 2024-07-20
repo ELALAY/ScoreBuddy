@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:scorebuddy/Models/match_model.dart';
 import 'dart:async';
@@ -16,7 +17,8 @@ class NewMatch extends StatefulWidget {
 }
 
 class NewMatchState extends State<NewMatch> {
-  DatabaseHelper databaseHelper = DatabaseHelper.instance;
+  DatabaseHelper databaseHelper = DatabaseHelper.instance;  
+  TextEditingController targetScoreController = TextEditingController();
   // ignore: avoid_init_to_null
   var selectedGame = null;
   bool _selectAll = false;
@@ -82,7 +84,7 @@ class NewMatchState extends State<NewMatch> {
               icon: const Icon(Icons.gamepad, color: Colors.white),
               value: selectedGame,
               hint: const Text(
-                'Associated Group',
+                'Choose a Game',
                 style: TextStyle(color: Colors.white),
               ),
               onChanged: (value) {
@@ -99,22 +101,43 @@ class NewMatchState extends State<NewMatch> {
                   ),
                 );
               }).toList(),
-              decoration: const InputDecoration(
+              decoration:  InputDecoration(
                 labelText: 'Game',
-                labelStyle: TextStyle(color: Colors.white),
+                labelStyle: const TextStyle(color: Colors.white),
+                hintText: 'winning',
                 enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.amber),
+                  borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.amber),
+                  borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
                 ),
                 border: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.amber),
+                  borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
                 ),
               ),
             ),
-
             const SizedBox(height: 16.0),
+            TextField(
+              controller: targetScoreController,
+              keyboardType: const TextInputType.numberWithOptions(decimal: false, signed: false),
+              decoration: InputDecoration(
+                suffixIcon: const Icon(CupertinoIcons.tray_arrow_up_fill),
+                labelText: 'Target',
+                labelStyle: const TextStyle(color: Colors.white),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
+                ),
+                border: OutlineInputBorder(
+                  borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
+                ),                
+                errorBorder: const OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.red),
+                ),
+              ),
+            ),
             // Persons Dropdown
             const SizedBox(height: 16.0),
             Row(
@@ -188,8 +211,9 @@ class NewMatchState extends State<NewMatch> {
                   if (selectedPlayers.length >= 2) {
                     try {
                       Game game = selectedGame;
+                      int target = int.parse(targetScoreController.text);
                       // Save the match and retrieve the generated match ID
-                      Match match = Match(game.id, game.name);
+                      Match match = Match(game.id, game.name, target);
                       int matchId = await databaseHelper.insertMatch(match);
 
                       // create scores for each player involved in the match
@@ -213,26 +237,13 @@ class NewMatchState extends State<NewMatch> {
                         context, 'at least 2 players should be selected');
                   }
                 },
-                child: const Text('Save Expense'),
+                child: const Text('Create Match'),
               ),
             ),
           ],
         ),
       ),
     );
-  }
-
-  // Function to save the debt
-  Future<int> creatScore(Score score) async {
-    await databaseHelper.insertScore(score);
-
-    // Show a success message
-    // ignore: use_build_context_synchronously
-    _showSnackBar(context, 'match created successfully');
-
-    debugPrint(
-        'Saving debt: ${score.id}'); // Replace with actual implementation
-    return score.id;
   }
 
   void _showSnackBar(BuildContext context, String message) {

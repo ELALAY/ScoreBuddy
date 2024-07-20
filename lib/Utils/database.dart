@@ -58,6 +58,7 @@ class DatabaseHelper {
         id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,        
         game_id INTEGER NOT NULL,
+        target INTEGER DEFAULT 0,
         active INTEGER DEFAULT 1,               
         FOREIGN KEY (game_id) REFERENCES Game (id) ON DELETE CASCADE
       )
@@ -233,8 +234,8 @@ class DatabaseHelper {
     final db = await instance
         .database; // Assuming you have a function to open your database
     int id = await db.rawInsert('''
-      INSERT INTO Match (name, game_id) VALUES (?, ?)''',
-        [match.name, match.gameId]);
+      INSERT INTO Match (name, game_id, target) VALUES (?, ?, ?)''',
+        [match.name, match.gameId, match.target]);
     debugPrint('match inserted $id');
     return id;
   }
