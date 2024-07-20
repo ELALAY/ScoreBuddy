@@ -1,3 +1,6 @@
+import 'dart:math';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../Models/player_model.dart';
 import '../Utils/database.dart';
@@ -19,7 +22,6 @@ class MatchScreenState extends State<MatchScreen> {
   List<Score> scores = [];
   List<Player> players = [];
   Map<int, int> playersWonGames = {};
-  Map<int, int> tempScores = {}; // Temporary list for scores
 
   @override
   void initState() {
@@ -27,17 +29,15 @@ class MatchScreenState extends State<MatchScreen> {
     fetchAllMatchScores();
   }
 
-  void fetchAllMatchScores() async {
-    List<Score> scoresList = await databaseHelper.getMatchScores(widget.match.id);
-    List<Player> playersList = await databaseHelper.getMatchPlayers(widget.match.id);
-    Map<int, int> scoresTemp = {};
+  void reload() {
+    fetchAllMatchScores();
+  }
 
-    for (Score score in scoresList) {
-      for (Player player in playersList) {
-        if (score.playerId == player.id) {
-        }
-      }
-    }
+  void fetchAllMatchScores() async {
+    List<Score> scoresList =
+        await databaseHelper.getMatchScores(widget.match.id);
+    List<Player> playersList =
+        await databaseHelper.getMatchPlayers(widget.match.id);
     setState(() {
       scores = scoresList;
       players = playersList;
@@ -45,12 +45,24 @@ class MatchScreenState extends State<MatchScreen> {
   }
 
   void saveScores() async {
-    // Save all scores to the database
     for (Score score in scores) {
       await databaseHelper.updateScore(score);
     }
+    reload();
+  
     // ignore: use_build_context_synchronously
     _showSnackBar(context, 'Scores saved successfully!');
+  }
+
+  void resetScroes() async {
+    // Save all scores to the database
+    for (Score score in scores) {
+      score.score = 0;
+      await databaseHelper.updateScore(score);
+    }
+    reload();
+    // ignore: use_build_context_synchronously
+    _showSnackBar(context, 'Scores reset successfully!');
   }
 
   @override
@@ -62,6 +74,19 @@ class MatchScreenState extends State<MatchScreen> {
           color: Colors.white,
           fontSize: 20,
         ),
+        actions: [
+          IconButton(
+              onPressed: () {
+                reload();
+              },
+              icon: const Icon(Icons.refresh)),
+          IconButton(
+              onPressed: () {
+                resetScroes();
+                reload();
+              },
+              icon: const Icon(Icons.reset_tv_sharp)),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(12),
@@ -158,7 +183,8 @@ class MatchScreenState extends State<MatchScreen> {
                                 ),
                                 labelText: 'Add Score',
                                 labelStyle: TextStyle(
-                                    color: Theme.of(context).colorScheme.primary),
+                                    color:
+                                        Theme.of(context).colorScheme.primary),
                                 enabledBorder: OutlineInputBorder(
                                   borderSide: BorderSide(
                                       color: Theme.of(context)
@@ -181,6 +207,20 @@ class MatchScreenState extends State<MatchScreen> {
                             ),
                           ),
                         ),
+                        SizedBox(
+                          width: 50,
+                          child: IconButton(
+                              onPressed: () {
+                                score.score += 51;
+                                saveScores();
+                                fetchAllMatchScores();
+                                reload();
+                              },
+                              icon: const Icon(
+                                CupertinoIcons.add_circled_solid,
+                                color: Colors.white,
+                              )),
+                        )
                       ],
                     ),
                   );
@@ -192,10 +232,13 @@ class MatchScreenState extends State<MatchScreen> {
                 child: const Text('Save Scores'),
                 onPressed: () {
                   saveScores();
+                  reload();
                 },
               ),
             ),
-            const SizedBox(height: 200.0,),
+            const SizedBox(
+              height: 200.0,
+            ),
           ],
         ),
       ),
