@@ -5,8 +5,8 @@ import 'package:scorebuddy/Models/match_model.dart';
 import 'package:scorebuddy/Models/game_model.dart';
 import '../Models/player_model.dart';
 import '../Utils/database.dart';
-import 'new_game_screem.dart';
 import 'match_screen.dart';
+import 'new_game_screem.dart';
 import 'new_match_screen.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -23,7 +23,6 @@ class MyHomePageState extends State<MyHomePage> {
 
   List<Match> allMatches = [];
   Map<int, int> allMatchplayersNumber = {};
-  
 
   @override
   void initState() {
@@ -37,11 +36,11 @@ class MyHomePageState extends State<MyHomePage> {
   }
 
   void fetchAllmatches() async {
-
     //get all matches
     List<Match> matches = await databaseHelper.getAllMatches();
     //get all matches count players
-    Map<int, int> matchPlayerCounts = await databaseHelper.getMatchePlayerCounts();
+    Map<int, int> matchPlayerCounts =
+        await databaseHelper.getMatchePlayerCounts();
 
     setState(() {
       allMatches = matches;
@@ -80,6 +79,12 @@ class MyHomePageState extends State<MyHomePage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
+  }
+
+  void navMatchScreen(Match matchNav) {
+    Navigator.push(context, MaterialPageRoute(builder: (context) {
+      return MatchScreen(match: matchNav);
+    }));
   }
 
   @override
@@ -204,7 +209,12 @@ class MyHomePageState extends State<MyHomePage> {
                             ],
                           ),
                         ),
-                        onTap: () {},
+                        onTap: () {
+                          Navigator.push(context,
+                              MaterialPageRoute(builder: (context) {
+                            return MatchScreen(match: match);
+                          }));
+                        },
                       ),
                     ),
                   );
@@ -215,7 +225,9 @@ class MyHomePageState extends State<MyHomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-          onPressed: () {createNewMatchScreen();},
+          onPressed: () {
+            createNewMatchScreen();
+          },
           backgroundColor: Theme.of(context).colorScheme.primary,
           child: const Icon(Icons.add)),
     );

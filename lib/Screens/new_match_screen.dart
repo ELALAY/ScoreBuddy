@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:scorebuddy/Models/match_model.dart';
+import 'package:scorebuddy/Screens/match_screen.dart';
 import 'dart:async';
 
 import '../Models/game_model.dart';
@@ -15,17 +16,18 @@ class NewMatch extends StatefulWidget {
 }
 
 class NewMatchState extends State<NewMatch> {
+  DatabaseHelper databaseHelper = DatabaseHelper.instance;
   // ignore: avoid_init_to_null
   var selectedGame = null;
+  bool _selectAll = false;
 
   List<Player> matchPlayers = [];
   List<Player> selectedPlayers = [];
   List<Player> allPlayers = [];
-  List<Game> allGames = [];
+  List<Game> allGames = [];  
 
-  DatabaseHelper databaseHelper = DatabaseHelper.instance;
+  late Match matchNav;
 
-  bool _selectAll = false;
 
   @override
   void initState() {
@@ -51,6 +53,19 @@ class NewMatchState extends State<NewMatch> {
     } catch (e) {
       debugPrint('Error fetching Games: $e');
     }
+  }
+
+  Future<void> fetchMatch(int id) async {
+    Match match = await databaseHelper.getMatch(id);
+    setState(() {
+      matchNav = match;
+    });
+  }
+
+  void navMatchScreen() {
+    Navigator.push(context, MaterialPageRoute(builder: (context) {
+      return MatchScreen(match: matchNav);
+    }));
   }
 
   @override
@@ -115,8 +130,7 @@ class NewMatchState extends State<NewMatch> {
                 ),
                 Text('Select All',
                     style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary)
-                        ),
+                        color: Theme.of(context).colorScheme.primary)),
               ],
             ),
             Text(
@@ -166,10 +180,9 @@ class NewMatchState extends State<NewMatch> {
                       await creatScore(score);
                     }
                     // ignore: use_build_context_synchronously
-                    Navigator.pop(context);
+                    navMatchScreen();
                   } catch (e) {
-                    _showSnackBar(context,
-                        'Error Parsing the Amount! Try adding decimals (100.0)');
+                    _showSnackBar(context, 'Error');
                   }
                 },
                 child: const Text('Save Expense'),
@@ -196,6 +209,7 @@ class NewMatchState extends State<NewMatch> {
     await databaseHelper.insertScore(score);
 
     // Show a success message
+    // ignore: use_build_context_synchronously
     _showSnackBar(context, 'match created successfully');
 
     debugPrint(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../Models/game_model.dart';
 import '../Utils/database.dart';
 
 class NewGame extends StatefulWidget {
@@ -16,6 +17,21 @@ class _NewGameState extends State<NewGame> {
   void createGame(String gameName) async {
     await databaseHelper.insertGame(gameName);
     debugPrint(gameName);
+  }
+
+  //checking for uniaue game names
+  Future<bool> checkingName(String name) async {
+    bool exists = false;
+
+    Game game = await databaseHelper.getGameByName(name);
+
+    if (game == null) {
+      exists = true;
+    } else {
+      exists = false;
+    }
+
+    return exists;
   }
 
   @override
@@ -65,7 +81,13 @@ class _NewGameState extends State<NewGame> {
             ),
             ElevatedButton(
                 onPressed: () {
-                  createGame(gameNameController.text);
+                  Future<bool> exists = checkingName(gameNameController.text);
+                  // ignore: unrelated_type_equality_checks
+                  if (exists == true) {
+                    createGame(gameNameController.text);
+                  } else {
+                    _showSnackBar(context, 'Game Name Already Exists!');
+                  }
                   Navigator.pop(context);
                 },
                 child: const Text('Create')),
@@ -73,5 +95,10 @@ class _NewGameState extends State<NewGame> {
         ),
       ),
     );
+  }
+
+  void _showSnackBar(BuildContext context, String message) {
+    final snackBar = SnackBar(content: Text(message));
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 }

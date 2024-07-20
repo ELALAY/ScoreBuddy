@@ -182,6 +182,21 @@ class DatabaseHelper {
     }
   }
 
+  Future<Game> getGameByName(String name) async {
+    Database db = await instance.database;
+    List<Map<String, dynamic>> result = await db.query(
+      'Game',
+      where: 'name = ?',
+      whereArgs: [name],
+    );
+
+    if (result.isNotEmpty) {
+      return Game.fromMap(result.first);
+    } else {
+      throw Exception('Group not found');
+    }
+  }
+
   Future<void> updateGameName(int gameId, String newName) async {
     final db = await database;
     await db.update(
