@@ -24,10 +24,10 @@ class NewMatchState extends State<NewMatch> {
   List<Player> matchPlayers = [];
   List<Player> selectedPlayers = [];
   List<Player> allPlayers = [];
-  List<Game> allGames = [];  
+  List<Game> allGames = [];
 
-  late Match matchNav;
-
+  //initialaizing score
+  List<Score> scoresToAdd = [];
 
   @override
   void initState() {
@@ -53,19 +53,6 @@ class NewMatchState extends State<NewMatch> {
     } catch (e) {
       debugPrint('Error fetching Games: $e');
     }
-  }
-
-  Future<void> fetchMatch(int id) async {
-    Match match = await databaseHelper.getMatch(id);
-    setState(() {
-      matchNav = match;
-    });
-  }
-
-  void navMatchScreen() {
-    Navigator.push(context, MaterialPageRoute(builder: (context) {
-      return MatchScreen(match: matchNav);
-    }));
   }
 
   @override
@@ -149,8 +136,12 @@ class NewMatchState extends State<NewMatch> {
                     setState(() {
                       if (selected) {
                         selectedPlayers.add(player);
+                        if (selectedPlayers.length == allPlayers.length) {
+                          _selectAll = true;
+                        }
                       } else {
                         selectedPlayers.remove(player);
+                        _selectAll = false;
                       }
                     });
                   },
@@ -161,30 +152,30 @@ class NewMatchState extends State<NewMatch> {
             Center(
               child: ElevatedButton(
                 onPressed: () async {
-                  try {
-                    Game game = selectedGame;
-                    // Save the match and retrieve the generated match ID
-                    Match match = Match(game.id, game.name);
-                    createMatch(match);
+                  if (selectedPlayers.length >= 2) {
+                    try {
+                      Game game = selectedGame;
+                      // Save the match and retrieve the generated match ID
+                      Match match = Match(game.id, game.name);
+                      int matchId = await databaseHelper.insertMatch(match);
 
-                    //initialaizing score
-                    Score score;
-                    // create scores for each player involved in the match
-                    for (Player player in selectedPlayers) {
-                      score = Score(
-                          gameId: game.id,
-                          matchId: match.id,
-                          playerId: player.id,
-                          score: 0,
-                          won: 0);
-
-                      await creatScore(score);
+                      // create scores for each player involved in the match
+                      for (Player player in selectedPlayers) {
+                        Score score = Score(
+                            gameId: game.id,
+                            matchId: matchId,
+                            playerId: player.id,
+                            score: 0,
+                            won: 0);
+                        scoresToAdd.add(score);
+                        await databaseHelper.insertScore(score);
+                      }
+                      // ignore: use_build_context_synchronously
+                      Navigator.pop(context);
+                    } catch (e) {
+                      _showSnackBar(context, 'Error');
                     }
-                    // ignore: use_build_context_synchronously
-                    navMatchScreen();
-                  } catch (e) {
-                    _showSnackBar(context, 'Error');
-                  }
+                  } else {_showSnackBar(context, 'at least 2 players should be selected');}
                 },
                 child: const Text('Save Expense'),
               ),
@@ -193,6 +184,15 @@ class NewMatchState extends State<NewMatch> {
         ),
       ),
     );
+  }
+
+  void save(Match match, List<Score> scoresList) async {
+    try {
+      await databaseHelper.insertMatchWithScores(match, scoresList);
+      debugPrint('created scores');
+    } catch (e) {
+      debugPrint('error creating match');
+    }
   }
 
   // Function to save the expense and return the generated expense ID

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:scorebuddy/Models/player_model.dart';
+import 'package:scorebuddy/Utils/database.dart';
 import '../Models/match_model.dart';
+import '../Models/score_model.dart';
 
 class MatchScreen extends StatefulWidget {
   final Match match;
@@ -10,19 +13,39 @@ class MatchScreen extends StatefulWidget {
 }
 
 class MatchScreenState extends State<MatchScreen> {
+  DatabaseHelper databaseHelper = DatabaseHelper.instance;
   TextEditingController gameNameController = TextEditingController();
-  List<int> scores = [100, 51]; // Example scores for players
+  /*List<int> scores = [100, 51]; // Example scores for players
   List<int> gamesWon = [5, 3]; // Example games won by players
-  List<String> players = ['Aymane', 'Sara']; // Example player names
+  List<String> players = ['Aymane', 'Sara']; // Example player names*/
 
-  // Method to calculate the total score
-  int getTotalScore() {
-    return scores.reduce((a, b) => a + b);
-  }
+  List<Score> scores = [];
+  List<Player> players = [];
+  List<int> gamesWon = [];
+  Map<int, int> playersWonGames = {};
 
   @override
   void initState() {
     super.initState();
+  }
+
+  void fetchAllMatchScores() async {
+    List<Score> scoresList = await databaseHelper.getMatchScores(widget.match.id);
+    List<Player> playersList = await databaseHelper.getMatchPlayers(widget.match.id);
+    Map<int, int> playersWonGamesList = {};
+
+    for(Score score in scoresList){
+      for(Player player in playersList){
+        if(score.playerId == player.id){
+          playersWonGamesList[player.id] = score.won;
+        }
+      }
+    }
+    setState(() {
+      scores = scoresList;
+      players = playersList;
+      playersWonGames = playersWonGamesList;
+    });
   }
 
   @override
@@ -52,7 +75,8 @@ class MatchScreenState extends State<MatchScreen> {
                 }
                 return null; // Use the default value.
               }),
-              headingTextStyle: TextStyle(color: Theme.of(context).colorScheme.primary),
+              headingTextStyle:
+                  TextStyle(color: Theme.of(context).colorScheme.primary),
               columns: const [
                 DataColumn(
                   label: Text(
@@ -86,9 +110,9 @@ class MatchScreenState extends State<MatchScreen> {
                 players.length,
                 (index) => DataRow(
                   cells: [
-                    DataCell(Text(players[index])),
-                    DataCell(Text('${scores[index]}')),
-                    DataCell(Text('${gamesWon[index]}')),
+                    DataCell(Text(players[index].name)),
+                    DataCell(Text('${scores[index].score}')),
+                    DataCell(Text('${scores[index].won}')),
                   ],
                 ),
               ),
@@ -105,7 +129,7 @@ class MatchScreenState extends State<MatchScreen> {
               child: ListView.builder(
                 itemCount: scores.length,
                 itemBuilder: (context, index) {
-                  String player = players[index];
+                  String player = players[index].name;
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8.0),
                     child: Row(
@@ -128,21 +152,25 @@ class MatchScreenState extends State<MatchScreen> {
                                 ),
                                 labelText: 'Add Score',
                                 labelStyle: TextStyle(
-                                    color: Theme.of(context).colorScheme.primary),
+                                    color:
+                                        Theme.of(context).colorScheme.primary),
                                 enabledBorder: OutlineInputBorder(
                                   borderSide: BorderSide(
-                                      color:
-                                          Theme.of(context).colorScheme.primary),
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderSide: BorderSide(
-                                      color:
-                                          Theme.of(context).colorScheme.primary),
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary),
                                 ),
                               ),
                               onSubmitted: (value) {
                                 setState(() {
-                                  scores[index] += int.tryParse(value) ?? 0;
+                                  scores[index].score += int.tryParse(value) ?? 0;
+                                  scores[index].won++;
                                 });
                               },
                             ),
@@ -154,6 +182,13 @@ class MatchScreenState extends State<MatchScreen> {
                 },
               ),
             ),
+            Center(
+              child: ElevatedButton(
+                child: const Text('Score'),
+                onPressed: () {},
+              ),
+            ),
+            const SizedBox(height: 200.0,),
           ],
         ),
       ),

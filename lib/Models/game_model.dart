@@ -7,8 +7,6 @@ class Game {
 
   Map<String, dynamic> toMap() {
     var map = <String, dynamic>{};
-
-    map['id'] = id;
     map['name'] = name;
 
     return map;

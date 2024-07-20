@@ -23,13 +23,7 @@ class _NewGameState extends State<NewGame> {
   Future<bool> checkingName(String name) async {
     bool exists = false;
 
-    Game game = await databaseHelper.getGameByName(name);
-
-    if (game == null) {
-      exists = true;
-    } else {
-      exists = false;
-    }
+    exists = await databaseHelper.checkGameName(name);
 
     return exists;
   }
@@ -80,14 +74,16 @@ class _NewGameState extends State<NewGame> {
               height: 16.0,
             ),
             ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   Future<bool> exists = checkingName(gameNameController.text);
                   // ignore: unrelated_type_equality_checks
-                  if (exists == true) {
+                  if (await exists) {
                     createGame(gameNameController.text);
                   } else {
+                    // ignore: use_build_context_synchronously
                     _showSnackBar(context, 'Game Name Already Exists!');
                   }
+                  // ignore: use_build_context_synchronously
                   Navigator.pop(context);
                 },
                 child: const Text('Create')),

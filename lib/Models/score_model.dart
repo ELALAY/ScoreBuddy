@@ -26,6 +26,16 @@ class Score {
   // Convert a Score instance to a map
   Map<String, dynamic> toMap() {
     return {
+      'gameId': gameId,
+      'matchId': matchId,
+      'playerId': playerId,
+      'score': score,
+      'won': won,
+    };
+  }
+  // Convert a Score instance to a map
+  Map<String, dynamic> toMapwithId() {
+    return {
       'id': id,
       'gameId': gameId,
       'matchId': matchId,

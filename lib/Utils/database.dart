@@ -26,7 +26,7 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDatabase() async {
-    String path = join(await getDatabasesPath(), 'scorebuddy1.db');
+    String path = join(await getDatabasesPath(), 'scorebuddy2.db');
     debugPrint('Database path: $path');
     return await openDatabase(
       path,
@@ -56,7 +56,7 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE IF NOT EXISTS Match (
         id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-        name TEXT UNIQUE NOT NULL,        
+        name TEXT NOT NULL,        
         game_id INTEGER NOT NULL,
         active INTEGER DEFAULT 1,               
         FOREIGN KEY (game_id) REFERENCES Game (id) ON DELETE CASCADE
@@ -70,12 +70,12 @@ class DatabaseHelper {
         match_id INTEGER NOT NULL,
         player_id INTEGER NOT NULL,
         score INTEGER DEFAULT 0,
-        won INTEGER NOT NULL,
+        won INTEGER DEFAULT 0,
         FOREIGN KEY (player_id) REFERENCES Player (id) ON DELETE CASCADE,
         FOREIGN KEY (match_id) REFERENCES Match (id) ON DELETE CASCADE,        
         FOREIGN KEY (game_id) REFERENCES Game (id) ON DELETE CASCADE
       )
-    ''');////-1:loss, 0: lost, 1: draw, 
+    '''); ////-1:loss, 0: lost, 1: draw,
 
     await db.execute('''
       INSERT INTO Game (name) VALUES ('Rami')
@@ -183,18 +183,16 @@ class DatabaseHelper {
     }
   }
 
-  Future<Game> getGameByName(String name) async {
+  Future<bool> checkGameName(String name) async {
     Database db = await instance.database;
-    List<Map<String, dynamic>> result = await db.query(
-      'Game',
-      where: 'name = ?',
-      whereArgs: [name],
-    );
+    List<Map<String, dynamic>> result =
+        await db.rawQuery('''SELECT * FROM Game WHERE name = ?''', [name]);
 
     if (result.isNotEmpty) {
-      return Game.fromMap(result.first);
+      Game game = Game.fromMap(result.first);
+      return true;
     } else {
-      throw Exception('Group not found');
+      return false;
     }
   }
 
@@ -229,12 +227,26 @@ class DatabaseHelper {
     return result;
   }
 
-  Future<void> insertMatch(Match match) async {
+  Future<int> insertMatch(Match match) async {
     final db = await instance
         .database; // Assuming you have a function to open your database
-    await db.rawInsert('''
-      INSERT INTO Match (game_id, name) VALUES (?, ?)
-    ''', [match.gameId, match.name]);
+    int id = await db.rawInsert('''
+      INSERT INTO Match (name, game_id) VALUES (?, ?)''',
+        [match.name, match.gameId]);
+    debugPrint('match inserted $id');
+    return id;
+  }
+
+  Future<void> insertMatchWithScores(Match match, List<Score> scores) async {
+    final db = await instance
+        .database; // Assuming you have a function to open your database
+    int id = await db.insert('Match', match.toMap());
+    debugPrint('match inserted $id');
+    for(Score score in scores){
+      score.matchId = match.id;
+      debugPrint('${score.matchId} ${score.id}');
+      insertScore(score);
+    }
   }
 
   Future<List<Match>> getAllMatches() async {
@@ -289,17 +301,9 @@ class DatabaseHelper {
   Future<void> insertScore(Score score) async {
     final db = await instance
         .database; // Assuming you have a function to open your database
-    await db.insert(
-      'Score', // Your table name
-      score.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-  }
-
-  Future<void> removeMatchMember(Score score) async {
-    Database db = await instance.database;
-    // Insert new group members for the given group ID
-    await db.rawInsert('DELETE FROM score WHERE id = ?', [score.id]);
+    await db.rawInsert('''
+      INSERT INTO Score (game_id, match_id, player_id) VALUES (?, ?, ?)''',
+        [score.gameId, score.matchId, score.playerId]);
   }
 
   Future<List<Player>> getMatchPlayers(int matchId) async {
@@ -318,5 +322,21 @@ class DatabaseHelper {
       personList.add(person);
     }
     return personList;
+  }
+
+  Future<List<Score>> getMatchScores(int matchId) async {
+    Database db = await instance.database;
+    List<Map<String, dynamic>> result = await db.rawQuery('''
+      SELECT * FROM Score
+      WHERE match_id = ?
+    ''', [matchId]);
+
+    // Convert the query result to a list of Group objects
+    List<Score> scoresList = [];
+    for (Map<String, dynamic> map in result) {
+      Score score = Score.fromMap(map);
+      scoresList.add(score);
+    }
+    return scoresList;
   }
 }

@@ -138,8 +138,14 @@ class MyHomePageState extends State<MyHomePage> {
                       // A motion is a widget used to control how the pane animates.
                       motion: const StretchMotion(),
                       // A pane can dismiss the Slidable.
-                      dismissible: DismissiblePane(onDismissed: () {}),
-                      // All actions are defined in the children parameter.
+                      dismissible: DismissiblePane(
+                        onDismissed: () {
+                          _showSnackbar(context, 'Deleted ${match.name}');
+                          deleteMatch(match);
+                          allMatches.remove(match);
+                          reload();
+                        },
+                      ), // All actions are defined in the children parameter.
                       children: [
                         // A SlidableAction can have an icon and/or a label.
                         SlidableAction(

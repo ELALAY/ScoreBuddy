@@ -9,13 +9,12 @@ class Match {
   // Convert a Match instance to a map
   Map<String, dynamic> toMap() {
     return {
-      'id': id,
-      'gameId': gameId,
+      'game_id': gameId,
       'name': name,
     };
   }
 
   factory Match.fromMap(Map<String, dynamic> map) {
-    return Match.withId(map['id'] ?? 0, map['gameId'] ?? 0, map['name'] ?? "N/A");
+    return Match.withId(map['id'] ?? 0, map['game_id'] ?? 0, map['name'] ?? "N/A");
   }
 }
