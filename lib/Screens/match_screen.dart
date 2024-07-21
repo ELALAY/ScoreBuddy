@@ -43,23 +43,39 @@ class MatchScreenState extends State<MatchScreen> {
   }
 
   void saveScores() async {
-    for (Score score in scores) {
-      await databaseHelper.updateScore(score);
+    int minScore = double.maxFinite.toInt();
+    int winnerId = -1;
+
+    // Find the player with the least score
+    for (var score in scores) {
+      if (score.score < minScore) {
+        minScore = score.score;
+        winnerId = score.playerId;
+      }
     }
+
+    // Increment the win count for the winner
+    if (winnerId != -1) {
+      for (var score in scores) {
+        if (score.playerId == winnerId) {
+          score.won++;
+        }
+        await databaseHelper.updateScore(score);
+      }
+    }
+
     reload();
-  
+
     // ignore: use_build_context_synchronously
     _showSnackBar(context, 'Scores saved successfully!');
   }
 
-  void resetScroes() async {
-    // Save all scores to the database
+  void resetScores() async {
     for (Score score in scores) {
       score.score = 0;
       await databaseHelper.updateScore(score);
     }
     reload();
-    // ignore: use_build_context_synchronously
     _showSnackBar(context, 'Scores reset successfully!');
   }
 
@@ -74,81 +90,95 @@ class MatchScreenState extends State<MatchScreen> {
         ),
         actions: [
           IconButton(
-              onPressed: () {
-                reload();
-              },
-              icon: const Icon(Icons.refresh)),
+            onPressed: () {
+              reload();
+            },
+            icon: const Icon(Icons.refresh),
+          ),
           IconButton(
-              onPressed: () {
-                resetScroes();
-                reload();
-              },
-              icon: const Icon(Icons.reset_tv_sharp)),
+            onPressed: () {
+              resetScores();
+              reload();
+            },
+            icon: const Icon(Icons.reset_tv_sharp),
+          ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          children: [
-            // Score table
-            DataTable(
-              showBottomBorder: true,
-              headingRowColor: MaterialStateProperty.resolveWith<Color?>(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            children: [
+              DataTable(
+                showBottomBorder: true,
+                headingRowColor: MaterialStateProperty.resolveWith<Color?>(
                   (Set<MaterialState> states) {
-                if (states.contains(MaterialState.hovered)) {
-                  return Theme.of(context)
-                      .colorScheme
-                      .primary
-                      .withOpacity(0.08);
-                }
-                return null; // Use the default value.
-              }),
-              headingTextStyle:
-                  TextStyle(color: Theme.of(context).colorScheme.primary),
-              columns:  const [
-                DataColumn(
-                  label: Text(
-                    'Player',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                    if (states.contains(MaterialState.hovered)) {
+                      return Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.08);
+                    }
+                    return null;
+                  },
+                ),
+                headingTextStyle: TextStyle(
+                    color: Theme.of(context).colorScheme.primary),
+                columns: const [
+                  DataColumn(
+                    label: Text(
+                      'Player',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
-                DataColumn(
-                  label: Text(
-                    'Score',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                  DataColumn(
+                    label: Text(
+                      'Score',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
-              ],
-              rows: List<DataRow>.generate(
-                players.length,
-                (index) => DataRow(
-                  cells: [
-                    DataCell(Text(players[index].name)),
-                    DataCell(Text('${scores[index].score}')),
-                  ],
+                  DataColumn(
+                    label: Text(
+                      'Wins',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+                rows: List<DataRow>.generate(
+                  players.length,
+                  (index) => DataRow(
+                    cells: [
+                      DataCell(Text(players[index].name)),
+                      DataCell(Text('${scores[index].score}')),
+                      DataCell(Text('${scores[index].won}')),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
-            // Display total score
-            Text(
-              'Players || Target:(${widget.match.target})',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            // Input area for adding scores
-            Expanded(
-              child: ListView.builder(
+              const SizedBox(height: 20),
+              Text(
+                'Players || Target:(${widget.match.target})',
+                style: const TextStyle(
+                    fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+              ListView.builder(
+                shrinkWrap: true,
                 itemCount: players.length,
                 itemBuilder: (context, index) {
                   String player = players[index].name;
                   Score score = scores[index];
+                  TextEditingController scoreController =
+                      TextEditingController();
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8.0),
                     child: Row(
@@ -164,6 +194,7 @@ class MatchScreenState extends State<MatchScreen> {
                           child: SizedBox(
                             width: 200.0,
                             child: TextField(
+                              controller: scoreController,
                               keyboardType: TextInputType.number,
                               decoration: InputDecoration(
                                 border: const OutlineInputBorder(
@@ -171,8 +202,9 @@ class MatchScreenState extends State<MatchScreen> {
                                 ),
                                 labelText: 'Add Score',
                                 labelStyle: TextStyle(
-                                    color:
-                                        Theme.of(context).colorScheme.primary),
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .primary),
                                 enabledBorder: OutlineInputBorder(
                                   borderSide: BorderSide(
                                       color: Theme.of(context)
@@ -191,6 +223,7 @@ class MatchScreenState extends State<MatchScreen> {
                                   int scoreValue = int.tryParse(value) ?? 0;
                                   score.score += scoreValue;
                                 });
+                                scoreController.clear();
                               },
                             ),
                           ),
@@ -198,36 +231,40 @@ class MatchScreenState extends State<MatchScreen> {
                         SizedBox(
                           width: 50,
                           child: IconButton(
-                              onPressed: () {
+                            onPressed: () {
+                              setState(() {
                                 score.score += 51;
-                                saveScores();
-                                fetchAllMatchScores();
-                                reload();
-                              },
-                              icon: const Icon(
-                                CupertinoIcons.add_circled_solid,
-                                color: Colors.white,
-                              )),
-                        )
+                              });
+                              scoreController.clear();
+                              saveScores();
+                              fetchAllMatchScores();
+                              reload();
+                            },
+                            icon: const Icon(
+                              CupertinoIcons.add_circled_solid,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   );
                 },
               ),
-            ),
-            Center(
-              child: ElevatedButton(
-                child: const Text('Save Scores'),
-                onPressed: () {
-                  saveScores();
-                  reload();
-                },
+              Center(
+                child: ElevatedButton(
+                  child: const Text('Save Scores'),
+                  onPressed: () {
+                    saveScores();
+                    reload();
+                  },
+                ),
               ),
-            ),
-            const SizedBox(
-              height: 200.0,
-            ),
-          ],
+              const SizedBox(
+                height: 200.0,
+              ),
+            ],
+          ),
         ),
       ),
     );
