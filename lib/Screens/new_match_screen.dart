@@ -22,7 +22,7 @@ class NewMatchState extends State<NewMatch> {
   TextEditingController matchNameController = TextEditingController();
   // ignore: avoid_init_to_null
   var selectedGame = null;
-  var matchName = "";
+  String genratedMatchName = "";
   bool _selectAll = false;
 
   List<Player> matchPlayers = [];
@@ -67,7 +67,7 @@ class NewMatchState extends State<NewMatch> {
   Future<void> generateMatchName(Game game) async {
     int matchCount = await databaseHelper.getMatchCountByGame(game.id);
     setState(() {
-      matchName = '${game.name} ${matchCount + 1}';
+      genratedMatchName = '${game.name} ${matchCount + 1}';
     });
   }
 
@@ -136,7 +136,7 @@ class NewMatchState extends State<NewMatch> {
                   decimal: false, signed: false),
               decoration: InputDecoration(
                 suffixIcon: const Icon(CupertinoIcons.tray_arrow_up_fill),
-                labelText: matchName == "" ? 'Name' : matchName,
+                labelText: selectedGame == null ? "Name" : genratedMatchName,
                 labelStyle: const TextStyle(color: Colors.white),
                 enabledBorder: OutlineInputBorder(
                   borderSide:
@@ -252,13 +252,17 @@ class NewMatchState extends State<NewMatch> {
               child: ElevatedButton(
                 onPressed: () async {
                   if (selectedPlayers.length >= 2) {
-                    if (matchNameController.text.isNotEmpty ||
+                    if (matchNameController.text.trim().isNotEmpty ||
                         targetScoreController.text.isNotEmpty) {
                       try {
                         Game game = selectedGame;
                         int target = int.parse(targetScoreController.text);
+
+                        //get match name
+                        String matchName = matchNameController.text.trim();
+                        String matchNameSubmit = matchName.isEmpty ? genratedMatchName : matchName;
                         // Save the match and retrieve the generated match ID
-                        Match match = Match(game.id, matchName, target);
+                        Match match = Match(game.id, matchNameSubmit, target);
                         int matchId = await databaseHelper.insertMatch(match);
 
                         // create scores for each player involved in the match

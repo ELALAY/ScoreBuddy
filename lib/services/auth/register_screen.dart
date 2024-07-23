@@ -1,8 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:scorebuddy/services/auth/auth_service.dart';
-
-import '../../Components/my_textfield.dart';
 import 'login_register_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -107,24 +104,42 @@ class _RegisterScreenState extends State<RegisterScreen> {
             const SizedBox(
               height: 40,
             ),
-            myTextField(
-                controller: emailController,
-                hintText: 'Email',
-                obscureText: false),
+            TextField(
+              controller: emailController,
+              obscureText: false,
+              decoration: InputDecoration(
+                  label: const Text('Email'),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.primary),
+                  )),
+            ),
             const SizedBox(
               height: 10,
             ),
-            myTextField(
-                controller: passwordController,
-                hintText: 'Password',
-                obscureText: true),
+            TextField(
+              controller: passwordController,
+              obscureText: true,
+              decoration: InputDecoration(
+                  label: const Text('Password'),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.primary),
+                  )),
+            ),
             const SizedBox(
               height: 10,
             ),
-            myTextField(
-                controller: confirmPasswordController,
-                hintText: 'Confirm Password',
-                obscureText: true),
+            TextField(
+              controller: confirmPasswordController,
+              obscureText: true,
+              decoration: InputDecoration(
+                  label: const Text('Confirm Password'),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.primary),
+                  )),
+            ),
             const SizedBox(
               height: 20,
             ),

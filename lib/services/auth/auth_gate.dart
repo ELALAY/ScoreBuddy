@@ -1,5 +1,4 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:scorebuddy/Screens/home.dart';
 import 'package:scorebuddy/services/auth/login_register_screen.dart';

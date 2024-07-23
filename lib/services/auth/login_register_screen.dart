@@ -1,7 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:scorebuddy/Components/my_button.dart';
-import 'package:scorebuddy/Components/my_textfield.dart';
 import 'package:scorebuddy/services/auth/register_screen.dart';
 
 import 'auth_service.dart';
@@ -26,57 +24,56 @@ class loginOrRegisterState extends State<loginOrRegister> {
   }
 
   void login() async {
-  final authService = AuthService();
-  if (emailController.text.trim().isNotEmpty &&
-      passwordController.text.trim().isNotEmpty) {
-    try {
-      await authService.signInWithEmailAndPassword(
-        emailController.text.trim(),
-        passwordController.text.trim(),
-      );
-      // Navigate to another screen or show success message
-    } on FirebaseAuthException catch (e) {
-      String errorMessage;
-      switch (e.code) {
-        case 'user-not-found':
-          errorMessage = 'No user found for that email.';
-          break;
-        case 'wrong-password':
-          errorMessage = 'Wrong password provided.';
-          break;
-        case 'invalid-email':
-          errorMessage = 'The email address is not valid.';
-          break;
-        default:
-          errorMessage = 'An error occurred. Please try again.';
+    final authService = AuthService();
+    if (emailController.text.trim().isNotEmpty &&
+        passwordController.text.trim().isNotEmpty) {
+      try {
+        await authService.signInWithEmailAndPassword(
+          emailController.text.trim(),
+          passwordController.text.trim(),
+        );
+        // Navigate to another screen or show success message
+      } on FirebaseAuthException catch (e) {
+        String errorMessage;
+        switch (e.code) {
+          case 'user-not-found':
+            errorMessage = 'No user found for that email.';
+            break;
+          case 'wrong-password':
+            errorMessage = 'Wrong password provided.';
+            break;
+          case 'invalid-email':
+            errorMessage = 'The email address is not valid.';
+            break;
+          default:
+            errorMessage = 'An error occurred. Please try again.';
+        }
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Login Error'),
+            content: Text(errorMessage),
+          ),
+        );
+      } catch (e) {
+        showDialog(
+          context: context,
+          builder: (context) => const AlertDialog(
+            title: Text('Login Error'),
+            content: Text('Invalid Credentials'),
+          ),
+        );
       }
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Login Error'),
-          content: Text(errorMessage),
-        ),
-      );
-    } catch (e) {
+    } else {
       showDialog(
         context: context,
         builder: (context) => const AlertDialog(
-          title: Text('Login Error'),
-          content: Text('Invalid Credentials'),
+          title: Text('Input Error'),
+          content: Text('Both fields should be filled!'),
         ),
       );
     }
-  } else {
-    showDialog(
-      context: context,
-      builder: (context) => const AlertDialog(
-        title: Text('Input Error'),
-        content: Text('Both fields should be filled!'),
-      ),
-    );
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
@@ -104,17 +101,29 @@ class loginOrRegisterState extends State<loginOrRegister> {
             const SizedBox(
               height: 40,
             ),
-            myTextField(
-                controller: emailController,
-                hintText: 'Email',
-                obscureText: false),
+            TextField(
+              controller: emailController,
+              obscureText: false,
+              decoration: InputDecoration(
+                  label: const Text('Email'),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.primary),
+                  )),
+            ),
             const SizedBox(
               height: 10,
             ),
-            myTextField(
-                controller: passwordController,
-                hintText: 'Password',
-                obscureText: true),
+            TextField(
+              controller: passwordController,
+              obscureText: true,
+              decoration: InputDecoration(
+                  label: const Text('Password'),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.primary),
+                  )),
+            ),
             const SizedBox(
               height: 20,
             ),

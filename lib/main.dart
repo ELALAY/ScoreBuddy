@@ -1,6 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:scorebuddy/Screens/home.dart';
 import 'package:scorebuddy/firebase_options.dart';
 import 'package:scorebuddy/services/auth/auth_gate.dart';
 
