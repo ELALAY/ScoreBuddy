@@ -1,12 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:scorebuddy/Models/match_model.dart';
+import 'package:scorebuddy/Models/room_model.dart';
 import 'dart:async';
 
 import '../Models/game_model.dart';
 import '../Models/player_model.dart';
 import '../Models/score_model.dart';
+import '../services/realtime_db/firebase_db.dart';
 import '../services/sqflite/database.dart';
 import 'new_player_screen.dart';
 
@@ -20,21 +21,18 @@ class NewMatch extends StatefulWidget {
 class NewMatchState extends State<NewMatch> {
   DatabaseHelper databaseHelper = DatabaseHelper.instance;
   FirebaseFirestore fbdatabaseHelper = FirebaseFirestore.instance;
-  
+  FirebaseDatabaseHelper firebaseDatabaseHelper = FirebaseDatabaseHelper();
+
   TextEditingController targetScoreController = TextEditingController();
-  TextEditingController matchNameController = TextEditingController();
+  TextEditingController roomNameController = TextEditingController();
   // ignore: avoid_init_to_null
   var selectedGame = null;
   String genratedMatchName = "";
   bool _selectAll = false;
 
-  List<Player> matchPlayers = [];
   List<Player> selectedPlayers = [];
   List<Player> allPlayers = [];
   List<Game> allGames = [];
-
-  //initializing score
-  List<Score> scoresToAdd = [];
 
   @override
   void initState() {
@@ -50,8 +48,10 @@ class NewMatchState extends State<NewMatch> {
 
   Future<void> fetchAllPlayers() async {
     try {
-      QuerySnapshot snapshot = await fbdatabaseHelper.collection('players').get();
-      List<Player> players = snapshot.docs.map((doc) => Player.fromFirestore(doc)).toList();
+      QuerySnapshot snapshot =
+          await fbdatabaseHelper.collection('players').get();
+      List<Player> players =
+          snapshot.docs.map((doc) => Player.fromFirestore(doc)).toList();
       setState(() {
         allPlayers = players;
       });
@@ -63,7 +63,8 @@ class NewMatchState extends State<NewMatch> {
   Future<void> fetchGames() async {
     try {
       QuerySnapshot snapshot = await fbdatabaseHelper.collection('games').get();
-      List<Game> games = snapshot.docs.map((doc) => Game.fromFirestore(doc)).toList();
+      List<Game> games =
+          snapshot.docs.map((doc) => Game.fromFirestore(doc)).toList();
       setState(() {
         allGames = games;
       });
@@ -72,11 +73,25 @@ class NewMatchState extends State<NewMatch> {
     }
   }
 
-  Future<void> generateMatchName(Game game) async {
-    int matchCount = await databaseHelper.getMatchCountByGame(game.id);
-    setState(() {
-      genratedMatchName = '${game.name} ${matchCount + 1}';
-    });
+  Future<void> createRoom(Room newRoom) async {
+    try {
+      // Add the map to the Firestore collection
+      await fbdatabaseHelper.collection('rooms').add(
+            newRoom.toMap(),
+          );
+      debugPrint("Room created successfully");
+    } catch (e) {
+      debugPrint("Error creating room: $e");
+    }
+  }
+
+  Future<bool> fbcheckingName(String name) async {
+    try {
+      return await firebaseDatabaseHelper.checkingRoomName(name);
+    } catch (e) {
+      _showSnackBar(context, 'Error checking game name: $e');
+      return false;
+    }
   }
 
   @override
@@ -107,7 +122,6 @@ class NewMatchState extends State<NewMatch> {
               onChanged: (value) async {
                 setState(() {
                   selectedGame = value;
-                  generateMatchName(value!);
                 });
               },
               items: allGames.map((game) {
@@ -139,7 +153,7 @@ class NewMatchState extends State<NewMatch> {
             ),
             const SizedBox(height: 16.0),
             TextField(
-              controller: matchNameController,
+              controller: roomNameController,
               keyboardType: const TextInputType.numberWithOptions(
                   decimal: false, signed: false),
               decoration: InputDecoration(
@@ -260,38 +274,33 @@ class NewMatchState extends State<NewMatch> {
               child: ElevatedButton(
                 onPressed: () async {
                   if (selectedPlayers.length >= 2) {
-                    if (matchNameController.text.trim().isNotEmpty ||
+                    if (roomNameController.text.trim().isNotEmpty ||
                         targetScoreController.text.isNotEmpty) {
-                      try {
-                        Game game = selectedGame;
-                        int target = int.parse(targetScoreController.text);
+                      Future<bool> exists =
+                          fbcheckingName(roomNameController.text.trim());
+                      if (exists != false) {
+                        try {
+                          //get match name
+                          String roomName = roomNameController.text.trim();
+                          int target = int.parse(targetScoreController.text);
 
-                        //get match name
-                        String matchName = matchNameController.text.trim();
-                        String matchNameSubmit = matchName.isEmpty ? genratedMatchName : matchName;
-                        // Save the match and retrieve the generated match ID
-                        Match match = Match(game.id, matchNameSubmit, target);
-                        int matchId = await databaseHelper.insertMatch(match);
-
-                        // create scores for each player involved in the match
-                        for (Player player in selectedPlayers) {
-                          Score score = Score(
-                              gameId: game.id,
-                              matchId: matchId,
-                              playerId: player.id,
-                              score: 0,
-                              won: 0);
-                          scoresToAdd.add(score);
-                          await databaseHelper.insertScore(score);
+                          Room roomTemp = Room(
+                              gameName: selectedGame.name,
+                              roomName: roomName,
+                              targetScore: target,
+                              isActive: true);
+                          createRoom(roomTemp);
+                          
+                          // ignore: use_build_context_synchronously
+                          Navigator.pop(context);
+                        } catch (e) {
+                          _showSnackBar(context, 'Error');
                         }
-                        // ignore: use_build_context_synchronously
-                        Navigator.pop(context);
-                      } catch (e) {
-                        _showSnackBar(context, 'Error');
+                      } else {
+                        _showSnackBar(context, 'Room name already exits!');
                       }
                     } else {
-                      _showSnackBar(
-                          context, 'all fileds should be filled');
+                      _showSnackBar(context, 'all fileds should be filled');
                     }
                   } else {
                     _showSnackBar(

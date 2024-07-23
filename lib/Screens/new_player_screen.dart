@@ -1,6 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:scorebuddy/Models/player_model.dart';
 import '../services/realtime_db/firebase_db.dart';
 import '../services/sqflite/database.dart';
 

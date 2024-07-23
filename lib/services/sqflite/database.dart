@@ -5,11 +5,6 @@ import 'package:sqflite/sqflite.dart';
 // ignore: depend_on_referenced_packages
 import 'package:path/path.dart';
 
-import '../../Models/game_model.dart';
-import '../../Models/player_model.dart';
-import '../../Models/match_model.dart';
-import '../../Models/score_model.dart';
-
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._privateConstructor();
   static Database? _database;
@@ -37,6 +32,7 @@ class DatabaseHelper {
       },
     );
   }
+  
 
   Future<void> createTables(Database db, int version) async {
     await db.execute('''
@@ -97,7 +93,7 @@ class DatabaseHelper {
       INSERT INTO Score (game_id, match_id, player_id) VALUES (1, 1, 2)
     ''');
   }
-
+/*
 //--------------------------------------------------------------------------------------
 //********Sccores Functions**********/
 //--------------------------------------------------------------------------------------
@@ -280,7 +276,7 @@ class DatabaseHelper {
     debugPrint('match inserted $id');
     return id;
   }
-
+/*
   Future<List<Match>> getAllMatches() async {
     Database db = await instance.database;
     List<Map<String, dynamic>> result = await db.query('Match');
@@ -292,7 +288,7 @@ class DatabaseHelper {
       matchList.add(match);
     }
     return matchList;
-  }
+  }*/
 
   Future<Match> getMatch(int id) async {
     final db = await instance
@@ -328,7 +324,7 @@ class DatabaseHelper {
 //--------------------------------------------------------------------------------------
 //********Sccores Functions**********/
 //--------------------------------------------------------------------------------------
-
+/*
   // Update a score in the database
   Future<void> updateScore(Score score) async {
     final db = await instance.database;
@@ -386,4 +382,5 @@ class DatabaseHelper {
       DELETE FROM Score
     ''', [matchId]);
   }
-}
+*/
+*/}

@@ -1,90 +1,51 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../Models/player_model.dart';
-import '../Models/match_model.dart';
-import '../Models/score_model.dart';
+import '../Models/room_model.dart';
 import '../services/sqflite/database.dart';
 
-class MatchScreen extends StatefulWidget {
-  final Match match;
-  const MatchScreen({super.key, required this.match});
+class RoomScreen extends StatefulWidget {
+  final Room room;
+  const RoomScreen({super.key, required this.room});
 
   @override
-  State<MatchScreen> createState() => MatchScreenState();
+  State<RoomScreen> createState() => RoomScreenState();
 }
 
-class MatchScreenState extends State<MatchScreen> {
+class RoomScreenState extends State<RoomScreen> {
   DatabaseHelper databaseHelper = DatabaseHelper.instance;
   TextEditingController gameNameController = TextEditingController();
 
-  List<Score> scores = [];
   List<Player> players = [];
   Map<int, int> playersWonGames = {};
 
   @override
   void initState() {
     super.initState();
-    fetchAllMatchScores();
+    fetchAllRoomScores();
   }
 
   void reload() {
-    fetchAllMatchScores();
+    fetchAllRoomScores();
   }
 
-  void fetchAllMatchScores() async {
-    List<Score> scoresList =
-        await databaseHelper.getMatchScores(widget.match.id);
-    List<Player> playersList =
-        await databaseHelper.getMatchPlayers(widget.match.id);
-    setState(() {
-      scores = scoresList;
-      players = playersList;
-    });
+  void fetchAllRoomScores() async {
+    
   }
 
   void saveScores() async {
-    int minScore = double.maxFinite.toInt();
-    int winnerId = -1;
-
-    // Find the player with the least score
-    for (var score in scores) {
-      if (score.score < minScore) {
-        minScore = score.score;
-        winnerId = score.playerId;
-      }
-    }
-
-    // Increment the win count for the winner
-    if (winnerId != -1) {
-      for (var score in scores) {
-        if (score.playerId == winnerId) {
-          score.won++;
-        }
-        await databaseHelper.updateScore(score);
-      }
-    }
-
-    reload();
-
-    // ignore: use_build_context_synchronously
-    _showSnackBar(context, 'Scores saved successfully!');
+    
   }
 
   void resetScores() async {
-    for (Score score in scores) {
-      score.score = 0;
-      await databaseHelper.updateScore(score);
-    }
-    reload();
-    // ignore: use_build_context_synchronously
-    _showSnackBar(context, 'Scores reset successfully!');
+    
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Match: ${widget.match.name}'),
+        title: Text('Room: ${widget.room.roomName}'),
         titleTextStyle: const TextStyle(
           color: Colors.white,
           fontSize: 20,
@@ -159,15 +120,15 @@ class MatchScreenState extends State<MatchScreen> {
                   (index) => DataRow(
                     cells: [
                       DataCell(Text(players[index].name)),
-                      DataCell(Text('${scores[index].score}')),
-                      DataCell(Text('${scores[index].won}')),
+                      //DataCell(Text('${scores[index].score}')),
+                      //DataCell(Text('${scores[index].won}')),
                     ],
                   ),
                 ),
               ),
               const SizedBox(height: 20),
               Text(
-                'Players || Target:(${widget.match.target})',
+                'Players || Target:(${widget.room.targetScore})',
                 style: const TextStyle(
                     fontSize: 20, fontWeight: FontWeight.bold),
               ),
@@ -177,7 +138,7 @@ class MatchScreenState extends State<MatchScreen> {
                 itemCount: players.length,
                 itemBuilder: (context, index) {
                   String player = players[index].name;
-                  Score score = scores[index];
+                  
                   TextEditingController scoreController =
                       TextEditingController();
                   return Padding(
@@ -221,8 +182,7 @@ class MatchScreenState extends State<MatchScreen> {
                               ),
                               onSubmitted: (value) {
                                 setState(() {
-                                  int scoreValue = int.tryParse(value) ?? 0;
-                                  score.score += scoreValue;
+                                  
                                 });
                                 scoreController.clear();
                               },
@@ -234,11 +194,11 @@ class MatchScreenState extends State<MatchScreen> {
                           child: IconButton(
                             onPressed: () {
                               setState(() {
-                                score.score += 51;
+                                //score.score += 51;
                               });
                               scoreController.clear();
                               saveScores();
-                              fetchAllMatchScores();
+                              fetchAllRoomScores();
                               reload();
                             },
                             icon: const Icon(
@@ -271,6 +231,7 @@ class MatchScreenState extends State<MatchScreen> {
     );
   }
 
+  // ignore: unused_element
   void _showSnackBar(BuildContext context, String message) {
     final snackBar = SnackBar(content: Text(message));
     ScaffoldMessenger.of(context).showSnackBar(snackBar);

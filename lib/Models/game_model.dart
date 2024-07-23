@@ -1,16 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Game {
-  int id;
+  String id;
   String name;
 
-  Game(this.name) : id = 0; // Default id to 0 if not provided
+  Game(this.name) : id = ''; // Default id to 0 if not provided
   Game.withId(this.id, this.name);
 
   Map<String, dynamic> toMap() {
     var map = <String, dynamic>{};
     map['name'] = name;
-    if (id != 0) map['id'] = id; // Include id only if it is not 0
+    map['id'] = id; // Include id only if it is not 0
     return map;
   }
 
@@ -20,6 +20,6 @@ class Game {
 
   factory Game.fromFirestore(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-    return Game.withId(doc.id.hashCode, data['name'] ?? ''); // Use hashCode to convert doc.id to int
+    return Game.withId(doc.id, data['name'] ?? ''); // Use hashCode to convert doc.id to int
   }
 }

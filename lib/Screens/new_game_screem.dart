@@ -85,7 +85,7 @@ class _NewGameState extends State<NewGame> {
                   bool fbexists = await fbcheckingName(gameNameController.text);
                   if (!fbexists) {
                     //createGame(gameNameController.text);
-                    fbcheckingName(gameNameController.text);
+                    fbcreateGame(gameNameController.text);
                     // ignore: use_build_context_synchronously
                     Navigator.pop(context);
                   } else {
