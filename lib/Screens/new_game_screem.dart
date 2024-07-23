@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../Utils/database.dart';
+import '../services/sqflite/database.dart';
+import '../services/realtime_db/firebase_db.dart';
 
 class NewGame extends StatefulWidget {
   const NewGame({super.key});
@@ -9,9 +10,28 @@ class NewGame extends StatefulWidget {
 }
 
 class _NewGameState extends State<NewGame> {
-  DatabaseHelper databaseHelper = DatabaseHelper.instance;
+  DatabaseHelper databaseHelper = DatabaseHelper.instance;  
+  FirebaseDatabaseHelper firebaseDatabaseHelper = FirebaseDatabaseHelper();
   TextEditingController gameNameController = TextEditingController();
 
+
+  void fbcreateGame(String gameName) async {
+    try {
+      await firebaseDatabaseHelper.createGame(gameName);
+      debugPrint('Game Created: $gameName');
+    } catch (e) {
+      _showSnackBar(context, 'Failed to create game: $e');
+    }
+  }
+
+  Future<bool> fbcheckingName(String name) async {
+    try {
+      return await firebaseDatabaseHelper.checkingName(name);
+    } catch (e) {
+      _showSnackBar(context, 'Error checking game name: $e');
+      return false;
+    }
+  }
   void createGame(String gameName) async {
     await databaseHelper.insertGame(gameName);
     debugPrint(gameName);
@@ -70,9 +90,11 @@ class _NewGameState extends State<NewGame> {
             ),
             ElevatedButton(
                 onPressed: () async {
-                  bool exists = await checkingName(gameNameController.text);
-                  if (!exists) {
-                    createGame(gameNameController.text);
+                  //bool exists = await checkingName(gameNameController.text);
+                  bool fbexists = await fbcheckingName(gameNameController.text);
+                  if (!fbexists) {
+                    //createGame(gameNameController.text);
+                    fbcheckingName(gameNameController.text);
                     // ignore: use_build_context_synchronously
                     Navigator.pop(context);
                   } else {

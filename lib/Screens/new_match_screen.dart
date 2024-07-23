@@ -6,7 +6,7 @@ import 'dart:async';
 import '../Models/game_model.dart';
 import '../Models/player_model.dart';
 import '../Models/score_model.dart';
-import '../Utils/database.dart';
+import '../services/sqflite/database.dart';
 import 'new_player_screen.dart';
 
 class NewMatch extends StatefulWidget {

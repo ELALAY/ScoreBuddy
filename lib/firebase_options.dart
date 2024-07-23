@@ -65,4 +65,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'scorebuddy-5e069.appspot.com',
     iosBundleId: 'com.example.scorebuddy',
   );
+
 }

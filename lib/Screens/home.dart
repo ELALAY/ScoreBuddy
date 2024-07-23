@@ -5,7 +5,7 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:scorebuddy/Models/match_model.dart';
 import 'package:scorebuddy/Models/game_model.dart';
 import '../Models/player_model.dart';
-import '../Utils/database.dart';
+import '../services/sqflite/database.dart';
 import '../services/auth/auth_service.dart';
 import 'match_screen.dart';
 import 'new_game_screem.dart';
@@ -34,7 +34,6 @@ class MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     fetchUser();
-    fetchAllGames();
     fetchAllmatches();
   }
 
@@ -44,6 +43,10 @@ class MyHomePageState extends State<MyHomePage> {
 
   void fetchUser() async {
     user = authService.getCurrenctuser();
+  }
+
+  void flushdb() async {
+    await databaseHelper.flushDb();
   }
  
   void fetchAllmatches() async {
@@ -59,13 +62,6 @@ class MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void fetchAllGames() async {
-    List<Game> allgames = await databaseHelper.getAllGames();
-    setState(() {
-      games = allgames;
-    });
-  }
-
   void createNewGameScreen() {
     Navigator.push(context, MaterialPageRoute(builder: (context) {
       return const NewGame();
@@ -76,10 +72,6 @@ class MyHomePageState extends State<MyHomePage> {
     Navigator.push(context, MaterialPageRoute(builder: (context) {
       return const NewMatch();
     }));
-  }
-
-  void deleteGame(Game game) async {
-    await databaseHelper.deleteGameById(game.id);
   }
 
   void deleteMatch(Match match) async {
@@ -137,15 +129,15 @@ class MyHomePageState extends State<MyHomePage> {
                 color: Theme.of(context).colorScheme.primary,
               ),
               accountName: const Text(
-                'User Name', // Replace with actual user name
+                'User Email:', // Replace with actual user name
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 18,
                 ),
               ),
-              accountEmail: const Text(
-                'user@example.com', // Replace with actual user email
-                style: TextStyle(
+              accountEmail: Text(
+                user!.email.toString(), // Replace with actual user email
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 14,
                 ),
@@ -169,7 +161,15 @@ class MyHomePageState extends State<MyHomePage> {
                 Navigator.pop(context);
               },
             ),
-            const Spacer(), // This will push the logout to the bottom
+            const Spacer(),
+            ListTile(
+              leading: const Icon(Icons.logout),
+              title: const Text('Flush Sqflite DB'),
+              onTap: () {
+                flushdb();
+                Navigator.pop(context);
+              },
+            ), // This will push the logout to the bottom
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('Logout'),

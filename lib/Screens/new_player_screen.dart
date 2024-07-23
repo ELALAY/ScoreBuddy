@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:scorebuddy/Models/player_model.dart';
-import '../Utils/database.dart';
+import '../services/sqflite/database.dart';
 
 class NewPlayer extends StatefulWidget {
   const NewPlayer({super.key});

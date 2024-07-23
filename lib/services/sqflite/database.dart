@@ -5,10 +5,10 @@ import 'package:sqflite/sqflite.dart';
 // ignore: depend_on_referenced_packages
 import 'package:path/path.dart';
 
-import '../Models/game_model.dart';
-import '../Models/player_model.dart';
-import '../Models/match_model.dart';
-import '../Models/score_model.dart';
+import '../../Models/game_model.dart';
+import '../../Models/player_model.dart';
+import '../../Models/match_model.dart';
+import '../../Models/score_model.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._privateConstructor();
@@ -98,7 +98,38 @@ class DatabaseHelper {
     ''');
   }
 
-  //--------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------
+//********Sccores Functions**********/
+//--------------------------------------------------------------------------------------
+
+  Future<void> flushDb() async {
+    deleteAllScores();
+    deleteAllMatches();
+    deleteAllGames();
+  }
+
+  Future<void> deleteAllScores() async {
+    Database db = await instance.database;
+    await db.execute('''
+      DELETE FROM Score
+    ''');
+  }
+
+  Future<void> deleteAllMatches() async {
+    Database db = await instance.database;
+    await db.execute('''
+      DELETE FROM Match
+    ''');
+  }
+
+  Future<void> deleteAllGames() async {
+    Database db = await instance.database;
+    await db.execute('''
+      DELETE FROM Game
+    ''');
+  }
+
+//--------------------------------------------------------------------------------------
 //********Player Player**********/
 //--------------------------------------------------------------------------------------
 

@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../Models/player_model.dart';
-import '../Utils/database.dart';
 import '../Models/match_model.dart';
 import '../Models/score_model.dart';
+import '../services/sqflite/database.dart';
 
 class MatchScreen extends StatefulWidget {
   final Match match;
