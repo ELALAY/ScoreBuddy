@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:scorebuddy/Models/match_model.dart';
@@ -18,6 +19,8 @@ class NewMatch extends StatefulWidget {
 
 class NewMatchState extends State<NewMatch> {
   DatabaseHelper databaseHelper = DatabaseHelper.instance;
+  FirebaseFirestore fbdatabaseHelper = FirebaseFirestore.instance;
+  
   TextEditingController targetScoreController = TextEditingController();
   TextEditingController matchNameController = TextEditingController();
   // ignore: avoid_init_to_null
@@ -46,21 +49,26 @@ class NewMatchState extends State<NewMatch> {
   }
 
   Future<void> fetchAllPlayers() async {
-    List<Player> players = await databaseHelper.getAllPlayers();
-    setState(() {
-      allPlayers = players;
-    });
+    try {
+      QuerySnapshot snapshot = await fbdatabaseHelper.collection('players').get();
+      List<Player> players = snapshot.docs.map((doc) => Player.fromFirestore(doc)).toList();
+      setState(() {
+        allPlayers = players;
+      });
+    } catch (e) {
+      debugPrint('Error fetching games: $e');
+    }
   }
 
   Future<void> fetchGames() async {
     try {
-      List<Game> groupsList = await databaseHelper.getAllGames();
+      QuerySnapshot snapshot = await fbdatabaseHelper.collection('games').get();
+      List<Game> games = snapshot.docs.map((doc) => Game.fromFirestore(doc)).toList();
       setState(() {
-        allGames = groupsList;
-        debugPrint('Fetched Games: $allGames');
+        allGames = games;
       });
     } catch (e) {
-      debugPrint('Error fetching Games: $e');
+      debugPrint('Error fetching games: $e');
     }
   }
 

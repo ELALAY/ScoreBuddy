@@ -12,6 +12,7 @@ class NewGame extends StatefulWidget {
 class _NewGameState extends State<NewGame> {
   DatabaseHelper databaseHelper = DatabaseHelper.instance;  
   FirebaseDatabaseHelper firebaseDatabaseHelper = FirebaseDatabaseHelper();
+
   TextEditingController gameNameController = TextEditingController();
 
 
@@ -26,21 +27,11 @@ class _NewGameState extends State<NewGame> {
 
   Future<bool> fbcheckingName(String name) async {
     try {
-      return await firebaseDatabaseHelper.checkingName(name);
+      return await firebaseDatabaseHelper.checkingGameName(name);
     } catch (e) {
       _showSnackBar(context, 'Error checking game name: $e');
       return false;
     }
-  }
-  void createGame(String gameName) async {
-    await databaseHelper.insertGame(gameName);
-    debugPrint(gameName);
-  }
-
-  // Checking for unique game names
-  Future<bool> checkingName(String name) async {
-    bool exists = await databaseHelper.checkGameName(name);
-    return exists;
   }
 
   @override

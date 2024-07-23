@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:scorebuddy/Models/player_model.dart';
+import '../services/realtime_db/firebase_db.dart';
 import '../services/sqflite/database.dart';
 
 class NewPlayer extends StatefulWidget {
@@ -11,18 +13,25 @@ class NewPlayer extends StatefulWidget {
 
 class _NewPlayerState extends State<NewPlayer> {
   DatabaseHelper databaseHelper = DatabaseHelper.instance;
+  FirebaseDatabaseHelper firebaseDatabaseHelper = FirebaseDatabaseHelper();
   TextEditingController gameNameController = TextEditingController();
 
-  void createGame(String playerName) async {
-    Player player = Player(playerName);
-    await databaseHelper.insertPlayer(player);
-    debugPrint(playerName);
+   void createPlayer(String playerName) async {
+    try {
+      await firebaseDatabaseHelper.createPlayer(playerName);
+      debugPrint('Game Created: $playerName');
+    } catch (e) {
+      _showSnackBar(context, 'Failed to create game: $e');
+    }
   }
 
-  // Checking for unique game names
   Future<bool> checkingName(String name) async {
-    bool exists = await databaseHelper.checkPlayerName(name);
-    return exists;
+    try {
+      return await firebaseDatabaseHelper.checkingPlayerName(name);
+    } catch (e) {
+      _showSnackBar(context, 'Error checking game name: $e');
+      return false;
+    }
   }
 
   @override
@@ -74,7 +83,7 @@ class _NewPlayerState extends State<NewPlayer> {
                 onPressed: () async {
                   bool exists = await checkingName(gameNameController.text);
                   if (!exists) {
-                    createGame(gameNameController.text);
+                    createPlayer(gameNameController.text);
                     // ignore: use_build_context_synchronously
                     Navigator.pop(context);
                   } else {
