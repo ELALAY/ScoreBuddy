@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:scorebuddy/services/auth/auth_service.dart';
 
@@ -16,33 +17,69 @@ class _RegisterScreenState extends State<RegisterScreen> {
   TextEditingController passwordController = TextEditingController();
   TextEditingController confirmPasswordController = TextEditingController();
 
-  void register() {
-    final authservice = AuthService();
-    if (passwordController.text == confirmPasswordController.text) {
-      if (emailController.text.contains('@')) {
-        try {
-          authservice.signUpWithEmailAndPassword(
-              emailController.text, passwordController.text);
-        } catch (e) {
-          showDialog(
-              context: context,
-              builder: (context) => AlertDialog(
-                    title: Text(e.toString()),
-                  ));
+  String errorMessage = '';
+
+  Future<void> register() async {
+    if (passwordController.text != confirmPasswordController.text) {
+      setState(() {
+        errorMessage = 'Passwords do not match';
+      });
+      showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+                title: Text(errorMessage),
+              ));
+      return;
+    }
+    if (!emailController.text.contains('@') ||
+        !emailController.text.contains('.')) {
+      setState(() {
+        errorMessage = 'invalid email';
+      });
+      showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+                title: Text(errorMessage),
+              ));
+      return;
+    }
+
+    try {
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+      );
+      // Navigate to another screen or show success message
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        switch (e.code) {
+          case 'weak-password':
+            errorMessage = 'The password provided is too weak.';
+            break;
+          case 'email-already-in-use':
+            errorMessage = 'The account already exists for that email.';
+            break;
+          case 'invalid-email':
+            errorMessage = 'The email address is not valid.';
+            break;
+          default:
+            errorMessage = 'An error occurred. Please try again.';
         }
-      } else {
         showDialog(
             context: context,
-            builder: (context) => const AlertDialog(
-                  title: Text("Invalid email!"),
+            builder: (context) => AlertDialog(
+                  title: Text(errorMessage),
                 ));
-      }
-    } else {
-      showDialog(
+      });
+    } catch (e) {
+      setState(() {
+        errorMessage = 'An error occurred. Please try again.';
+        showDialog(
             context: context,
-            builder: (context) => const AlertDialog(
-                  title: Text("Passwords don't match!"),
+            builder: (context) => AlertDialog(
+                  title: Text(errorMessage),
                 ));
+      });
     }
   }
 
