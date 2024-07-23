@@ -1,9 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 // ignore: depend_on_referenced_packages
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:scorebuddy/Models/match_model.dart';
 import 'package:scorebuddy/Models/game_model.dart';
-import 'package:scorebuddy/services/auth/login_register_screen.dart';
 import '../Models/player_model.dart';
 import '../Utils/database.dart';
 import '../services/auth/auth_service.dart';
@@ -20,15 +20,20 @@ class MyHomePage extends StatefulWidget {
 
 class MyHomePageState extends State<MyHomePage> {
   DatabaseHelper databaseHelper = DatabaseHelper.instance;
+  final authService = AuthService();
+  
   List<Game> games = [];
   List<Player> players = [];
 
   List<Match> allMatches = [];
   Map<int, int> allMatchplayersNumber = {};
 
+  User? user;
+
   @override
   void initState() {
     super.initState();
+    fetchUser();
     fetchAllGames();
     fetchAllmatches();
   }
@@ -37,6 +42,10 @@ class MyHomePageState extends State<MyHomePage> {
     fetchAllmatches();
   }
 
+  void fetchUser() async {
+    user = authService.getCurrenctuser();
+  }
+ 
   void fetchAllmatches() async {
     //get all matches
     List<Match> matches = await databaseHelper.getAllMatches();
@@ -89,17 +98,11 @@ class MyHomePageState extends State<MyHomePage> {
     }));
   }
 
-  void navLogin() {
-    Navigator.push(context, MaterialPageRoute(builder: (context) {
-      return const loginOrRegister();
-    }));
-  }
-
   void logout() async {
     final authservice = AuthService();
     try {
       authservice.signout();
-      } catch (e) {
+    } catch (e) {
       showDialog(
           context: context,
           builder: (context) => AlertDialog(
@@ -115,16 +118,68 @@ class MyHomePageState extends State<MyHomePage> {
         title: const Text('Games Score'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
-            color: Colors.white,
-            onPressed: (){reload();}
-          ),
+              icon: const Icon(Icons.refresh),
+              color: Colors.white,
+              onPressed: () {
+                reload();
+              }),
           IconButton(
-            icon: const Icon(Icons.logout_outlined),
-            color: Colors.white,
-            onPressed: logout
-          ),
+              icon: const Icon(Icons.logout_outlined),
+              color: Colors.white,
+              onPressed: logout),
         ],
+      ),
+      drawer: Drawer(
+        child: Column(
+          children: <Widget>[
+            UserAccountsDrawerHeader(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              accountName: const Text(
+                'User Name', // Replace with actual user name
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                ),
+              ),
+              accountEmail: const Text(
+                'user@example.com', // Replace with actual user email
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                ),
+              ),
+              currentAccountPicture: CircleAvatar(
+                backgroundColor: Colors.white,
+                child: Text(
+                  'U', // Replace with the user's initials or an image
+                  style: TextStyle(
+                    fontSize: 40.0,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.person_add),
+              title: const Text('Add Friends'),
+              onTap: () {
+                // Handle the navigation to the Add Friends screen here
+                Navigator.pop(context);
+              },
+            ),
+            const Spacer(), // This will push the logout to the bottom
+            ListTile(
+              leading: const Icon(Icons.logout),
+              title: const Text('Logout'),
+              onTap: () {
+                logout();
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(12),
