@@ -1,10 +1,13 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 // ignore: depend_on_referenced_packages
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:scorebuddy/Models/match_model.dart';
 import 'package:scorebuddy/Models/game_model.dart';
+import 'package:scorebuddy/services/auth/login_register_screen.dart';
 import '../Models/player_model.dart';
 import '../Utils/database.dart';
+import '../services/auth/auth_service.dart';
 import 'match_screen.dart';
 import 'new_game_screem.dart';
 import 'new_match_screen.dart';
@@ -87,6 +90,25 @@ class MyHomePageState extends State<MyHomePage> {
     }));
   }
 
+  void navLogin() {
+    Navigator.push(context, MaterialPageRoute(builder: (context) {
+      return const loginOrRegister();
+    }));
+  }
+
+  void logout() async {
+    final authservice = AuthService();
+    try {
+      authservice.signout();
+      } catch (e) {
+      showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+                title: Text(e.toString()),
+              ));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -97,6 +119,11 @@ class MyHomePageState extends State<MyHomePage> {
             icon: const Icon(Icons.refresh),
             color: Colors.white,
             onPressed: (){reload();}
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout_outlined),
+            color: Colors.white,
+            onPressed: logout
           ),
         ],
       ),

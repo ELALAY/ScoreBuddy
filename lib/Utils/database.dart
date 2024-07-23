@@ -217,6 +217,16 @@ class DatabaseHelper {
     return result;
   }
 
+  Future<int> getMatchCountByGame(int gameId) async {
+    final db = await instance.database;
+    var result = await db.rawQuery('''
+      SELECT COUNT(*) as count FROM Match WHERE game_id = ?
+    ''', [gameId]);
+
+    int count = Sqflite.firstIntValue(result) ?? 0;
+    return count;
+  }
+
 //--------------------------------------------------------------------------------------
 //********Match Functions**********/
 //--------------------------------------------------------------------------------------

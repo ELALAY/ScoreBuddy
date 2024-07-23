@@ -76,6 +76,7 @@ class MatchScreenState extends State<MatchScreen> {
       await databaseHelper.updateScore(score);
     }
     reload();
+    // ignore: use_build_context_synchronously
     _showSnackBar(context, 'Scores reset successfully!');
   }
 

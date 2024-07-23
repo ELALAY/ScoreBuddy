@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "438372412254",
+    "project_id": "scorebuddy-5e069",
+    "storage_bucket": "scorebuddy-5e069.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:438372412254:android:358da341c8137daa923dcf",
+        "android_client_info": {
+          "package_name": "com.example.scorebuddy"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC0jbSfmYwgBzqgk_Fv6VAP0EQfbc4bC3c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

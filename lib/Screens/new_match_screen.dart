@@ -17,10 +17,12 @@ class NewMatch extends StatefulWidget {
 }
 
 class NewMatchState extends State<NewMatch> {
-  DatabaseHelper databaseHelper = DatabaseHelper.instance;  
+  DatabaseHelper databaseHelper = DatabaseHelper.instance;
   TextEditingController targetScoreController = TextEditingController();
+  TextEditingController matchNameController = TextEditingController();
   // ignore: avoid_init_to_null
   var selectedGame = null;
+  var matchName = "";
   bool _selectAll = false;
 
   List<Player> matchPlayers = [];
@@ -28,7 +30,7 @@ class NewMatchState extends State<NewMatch> {
   List<Player> allPlayers = [];
   List<Game> allGames = [];
 
-  //initialaizing score
+  //initializing score
   List<Score> scoresToAdd = [];
 
   @override
@@ -62,6 +64,13 @@ class NewMatchState extends State<NewMatch> {
     }
   }
 
+  Future<void> generateMatchName(Game game) async {
+    int matchCount = await databaseHelper.getMatchCountByGame(game.id);
+    setState(() {
+      matchName = '${game.name} ${matchCount + 1}';
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -73,7 +82,7 @@ class NewMatchState extends State<NewMatch> {
         ),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -87,9 +96,10 @@ class NewMatchState extends State<NewMatch> {
                 'Choose a Game',
                 style: TextStyle(color: Colors.white),
               ),
-              onChanged: (value) {
+              onChanged: (value) async {
                 setState(() {
                   selectedGame = value;
+                  generateMatchName(value!);
                 });
               },
               items: allGames.map((game) {
@@ -101,38 +111,71 @@ class NewMatchState extends State<NewMatch> {
                   ),
                 );
               }).toList(),
-              decoration:  InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Game',
                 labelStyle: const TextStyle(color: Colors.white),
-                hintText: 'winning',
+                hintText: 'Choose Game',
                 enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
+                  borderSide:
+                      BorderSide(color: Theme.of(context).colorScheme.primary),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
+                  borderSide:
+                      BorderSide(color: Theme.of(context).colorScheme.primary),
                 ),
                 border: OutlineInputBorder(
-                  borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
+                  borderSide:
+                      BorderSide(color: Theme.of(context).colorScheme.primary),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16.0),
+            TextField(
+              controller: matchNameController,
+              keyboardType: const TextInputType.numberWithOptions(
+                  decimal: false, signed: false),
+              decoration: InputDecoration(
+                suffixIcon: const Icon(CupertinoIcons.tray_arrow_up_fill),
+                labelText: matchName == "" ? 'Name' : matchName,
+                labelStyle: const TextStyle(color: Colors.white),
+                enabledBorder: OutlineInputBorder(
+                  borderSide:
+                      BorderSide(color: Theme.of(context).colorScheme.primary),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide:
+                      BorderSide(color: Theme.of(context).colorScheme.primary),
+                ),
+                border: OutlineInputBorder(
+                  borderSide:
+                      BorderSide(color: Theme.of(context).colorScheme.primary),
+                ),
+                errorBorder: const OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.red),
                 ),
               ),
             ),
             const SizedBox(height: 16.0),
             TextField(
               controller: targetScoreController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: false, signed: false),
+              keyboardType: const TextInputType.numberWithOptions(
+                  decimal: false, signed: false),
               decoration: InputDecoration(
                 suffixIcon: const Icon(CupertinoIcons.tray_arrow_up_fill),
                 labelText: 'Target',
                 labelStyle: const TextStyle(color: Colors.white),
                 enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
+                  borderSide:
+                      BorderSide(color: Theme.of(context).colorScheme.primary),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
+                  borderSide:
+                      BorderSide(color: Theme.of(context).colorScheme.primary),
                 ),
                 border: OutlineInputBorder(
-                  borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
-                ),                
+                  borderSide:
+                      BorderSide(color: Theme.of(context).colorScheme.primary),
+                ),
                 errorBorder: const OutlineInputBorder(
                   borderSide: BorderSide(color: Colors.red),
                 ),
@@ -209,32 +252,38 @@ class NewMatchState extends State<NewMatch> {
               child: ElevatedButton(
                 onPressed: () async {
                   if (selectedPlayers.length >= 2) {
-                    try {
-                      Game game = selectedGame;
-                      int target = int.parse(targetScoreController.text);
-                      // Save the match and retrieve the generated match ID
-                      Match match = Match(game.id, game.name, target);
-                      int matchId = await databaseHelper.insertMatch(match);
+                    if (matchNameController.text.isNotEmpty ||
+                        targetScoreController.text.isNotEmpty) {
+                      try {
+                        Game game = selectedGame;
+                        int target = int.parse(targetScoreController.text);
+                        // Save the match and retrieve the generated match ID
+                        Match match = Match(game.id, matchName, target);
+                        int matchId = await databaseHelper.insertMatch(match);
 
-                      // create scores for each player involved in the match
-                      for (Player player in selectedPlayers) {
-                        Score score = Score(
-                            gameId: game.id,
-                            matchId: matchId,
-                            playerId: player.id,
-                            score: 0,
-                            won: 0);
-                        scoresToAdd.add(score);
-                        await databaseHelper.insertScore(score);
+                        // create scores for each player involved in the match
+                        for (Player player in selectedPlayers) {
+                          Score score = Score(
+                              gameId: game.id,
+                              matchId: matchId,
+                              playerId: player.id,
+                              score: 0,
+                              won: 0);
+                          scoresToAdd.add(score);
+                          await databaseHelper.insertScore(score);
+                        }
+                        // ignore: use_build_context_synchronously
+                        Navigator.pop(context);
+                      } catch (e) {
+                        _showSnackBar(context, 'Error');
                       }
-                      // ignore: use_build_context_synchronously
-                      Navigator.pop(context);
-                    } catch (e) {
-                      _showSnackBar(context, 'Error');
+                    } else {
+                      _showSnackBar(
+                          context, 'all fileds should be filled');
                     }
                   } else {
                     _showSnackBar(
-                        context, 'at least 2 players should be selected');
+                        context, 'At least 2 players should be selected');
                   }
                 },
                 child: const Text('Create Match'),
