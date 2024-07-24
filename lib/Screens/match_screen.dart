@@ -36,40 +36,50 @@ class RoomScreenState extends State<RoomScreen> {
   }
 
   void fetchAllRoomScores() async {
-  try {
-    QuerySnapshot playerScoresQuerySnapshot = await fbdatabaseHelper
-        .collection('playerScores')
-        .where('roomName', isEqualTo: widget.room.roomName)
-        .get();
+    try {
+      QuerySnapshot playerScoresQuerySnapshot = await fbdatabaseHelper
+          .collection('playerScores')
+          .where('roomName', isEqualTo: widget.room.roomName)
+          .get();
 
-    if (playerScoresQuerySnapshot.docs.isNotEmpty) {
-      List<PlayerScore> allScores = playerScoresQuerySnapshot.docs
-          .map((doc) => PlayerScore.fromFirestore(doc))
-          .toList();
+      if (playerScoresQuerySnapshot.docs.isNotEmpty) {
+        List<PlayerScore> allScores = playerScoresQuerySnapshot.docs
+            .map((doc) => PlayerScore.fromFirestore(doc))
+            .toList();
 
-      setState(() {
-        scores = allScores;
-        debugPrint('Scores fetched successfully: ${allScores.length}');
-        for(PlayerScore score in allScores){
-          debugPrint('${score.playerName}');
-        }
-        
-      });
-    } else {
-      setState(() {
-        scores = [];
-        debugPrint('No scores found for room: ${widget.room.roomName}');
-      });
+        setState(() {
+          scores = allScores;
+          debugPrint('Scores fetched successfully: ${allScores.length}');
+          for (PlayerScore score in allScores) {
+            debugPrint('${score.playerName}');
+          }
+        });
+      } else {
+        setState(() {
+          scores = [];
+          debugPrint('No scores found for room: ${widget.room.roomName}');
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching player scores: $e');
     }
-  } catch (e) {
-    debugPrint('Error fetching player scores: $e');
   }
-}
 
+  void updateScore(PlayerScore score, int newScore) async {
+    try {
+      await firebaseDatabaseHelper.updatePlayerScore(
+          widget.room.roomName, score.playerName, newScore);
+      debugPrint('updated score of ${score.playerName}');
+    } catch (e) {
+      _showSnackBar(context, 'Failed to create game: $e');
+    }
+  }
 
-  void saveScores() async {}
-
-  void resetScores() async {}
+  void resetScores() async {
+    for (PlayerScore score in scores) {
+      updateScore(score, 0);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -166,6 +176,7 @@ class RoomScreenState extends State<RoomScreen> {
                 shrinkWrap: true,
                 itemCount: scores.length,
                 itemBuilder: (context, index) {
+                  PlayerScore score = scores[index];
                   String player = scores[index].playerName;
                   TextEditingController scoreController =
                       TextEditingController();
@@ -208,8 +219,14 @@ class RoomScreenState extends State<RoomScreen> {
                                 ),
                               ),
                               onSubmitted: (value) {
-                                setState(() {});
-                                scoreController.clear();
+                                setState(() {
+                                  updateScore(
+                                      score,
+                                      score.score +
+                                          int.parse(scoreController.text));
+                                  score.score += int.parse(scoreController.text);
+                                  scoreController.clear();
+                                });
                               },
                             ),
                           ),
@@ -218,12 +235,8 @@ class RoomScreenState extends State<RoomScreen> {
                           width: 50,
                           child: IconButton(
                             onPressed: () {
-                              setState(() {
-                                //score.score += 51;
-                              });
-                              scoreController.clear();
-                              saveScores();
-                              fetchAllRoomScores();
+                              setState(() {});
+                              updateScore(score, score.score + 51);
                               reload();
                             },
                             icon: const Icon(
@@ -237,15 +250,14 @@ class RoomScreenState extends State<RoomScreen> {
                   );
                 },
               ),
-              Center(
+              /*Center(
                 child: ElevatedButton(
                   child: const Text('Save Scores'),
                   onPressed: () {
-                    saveScores();
                     reload();
                   },
                 ),
-              ),
+              ),*/
               const SizedBox(
                 height: 200.0,
               ),

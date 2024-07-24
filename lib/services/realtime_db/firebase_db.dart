@@ -205,12 +205,12 @@ class FirebaseDatabaseHelper {
     }
   }
 
-  Future<void> updatePlayerScore(int roomId, int playerId, int newScore) async {
+  Future<void> updatePlayerScore(String roomName, String playerName, int newScore) async {
     try {
       QuerySnapshot querySnapshot = await _db
           .collection('playerScores')
-          .where('roomId', isEqualTo: roomId)
-          .where('playerId', isEqualTo: playerId)
+          .where('roomName', isEqualTo: roomName)
+          .where('playerName', isEqualTo: playerName)
           .get();
 
       if (querySnapshot.docs.isNotEmpty) {
