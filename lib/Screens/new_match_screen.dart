@@ -295,6 +295,7 @@ class NewMatchState extends State<NewMatch> {
                         targetScoreController.text.isNotEmpty) {
                       Future<bool> exists =
                           fbcheckingName(roomNameController.text.trim());
+                      // ignore: unrelated_type_equality_checks
                       if (exists != false) {
                         try {
                           //get match name

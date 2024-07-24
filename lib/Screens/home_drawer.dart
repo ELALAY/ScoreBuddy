@@ -25,7 +25,7 @@ class _MyHomeDrawerState extends State<MyHomeDrawer> {
 
   void navFriendsScreen() {
     Navigator.push(context, MaterialPageRoute(builder: (context) {
-      return const AddFriendScreen();
+      return AddFriendScreen();
     }));
   }
 

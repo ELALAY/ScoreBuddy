@@ -51,7 +51,7 @@ class RoomScreenState extends State<RoomScreen> {
           scores = allScores;
           debugPrint('Scores fetched successfully: ${allScores.length}');
           for (PlayerScore score in allScores) {
-            debugPrint('${score.playerName}');
+            debugPrint(score.playerName);
           }
         });
       } else {
