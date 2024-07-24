@@ -1,7 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../Models/player_model.dart';
 import '../Models/room_model.dart';
+import '../Models/score_model.dart';
+import '../services/realtime_db/firebase_db.dart';
 import '../services/sqflite/database.dart';
 
 class RoomScreen extends StatefulWidget {
@@ -14,9 +17,12 @@ class RoomScreen extends StatefulWidget {
 
 class RoomScreenState extends State<RoomScreen> {
   DatabaseHelper databaseHelper = DatabaseHelper.instance;
+  FirebaseFirestore fbdatabaseHelper = FirebaseFirestore.instance;
+  FirebaseDatabaseHelper firebaseDatabaseHelper = FirebaseDatabaseHelper();
   TextEditingController gameNameController = TextEditingController();
 
   List<Player> players = [];
+  List<PlayerScore> scores = [];
   Map<int, int> playersWonGames = {};
 
   @override
@@ -30,16 +36,40 @@ class RoomScreenState extends State<RoomScreen> {
   }
 
   void fetchAllRoomScores() async {
-    
-  }
+  try {
+    QuerySnapshot playerScoresQuerySnapshot = await fbdatabaseHelper
+        .collection('playerScores')
+        .where('roomName', isEqualTo: widget.room.roomName)
+        .get();
 
-  void saveScores() async {
-    
-  }
+    if (playerScoresQuerySnapshot.docs.isNotEmpty) {
+      List<PlayerScore> allScores = playerScoresQuerySnapshot.docs
+          .map((doc) => PlayerScore.fromFirestore(doc))
+          .toList();
 
-  void resetScores() async {
-    
+      setState(() {
+        scores = allScores;
+        debugPrint('Scores fetched successfully: ${allScores.length}');
+        for(PlayerScore score in allScores){
+          debugPrint('${score.playerName}');
+        }
+        
+      });
+    } else {
+      setState(() {
+        scores = [];
+        debugPrint('No scores found for room: ${widget.room.roomName}');
+      });
+    }
+  } catch (e) {
+    debugPrint('Error fetching player scores: $e');
   }
+}
+
+
+  void saveScores() async {}
+
+  void resetScores() async {}
 
   @override
   Widget build(BuildContext context) {
@@ -84,8 +114,8 @@ class RoomScreenState extends State<RoomScreen> {
                     return null;
                   },
                 ),
-                headingTextStyle: TextStyle(
-                    color: Theme.of(context).colorScheme.primary),
+                headingTextStyle:
+                    TextStyle(color: Theme.of(context).colorScheme.primary),
                 columns: const [
                   DataColumn(
                     label: Text(
@@ -105,7 +135,7 @@ class RoomScreenState extends State<RoomScreen> {
                       ),
                     ),
                   ),
-                  DataColumn(
+                  /*DataColumn(
                     label: Text(
                       'Wins',
                       style: TextStyle(
@@ -113,15 +143,14 @@ class RoomScreenState extends State<RoomScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ),
+                  ),*/
                 ],
                 rows: List<DataRow>.generate(
-                  players.length,
+                  scores.length,
                   (index) => DataRow(
                     cells: [
-                      DataCell(Text(players[index].name)),
-                      //DataCell(Text('${scores[index].score}')),
-                      //DataCell(Text('${scores[index].won}')),
+                      DataCell(Text(scores[index].playerName)),
+                      DataCell(Text(scores[index].score.toString())),
                     ],
                   ),
                 ),
@@ -129,16 +158,15 @@ class RoomScreenState extends State<RoomScreen> {
               const SizedBox(height: 20),
               Text(
                 'Players || Target:(${widget.room.targetScore})',
-                style: const TextStyle(
-                    fontSize: 20, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
               ListView.builder(
                 shrinkWrap: true,
-                itemCount: players.length,
+                itemCount: scores.length,
                 itemBuilder: (context, index) {
-                  String player = players[index].name;
-                  
+                  String player = scores[index].playerName;
                   TextEditingController scoreController =
                       TextEditingController();
                   return Padding(
@@ -164,9 +192,8 @@ class RoomScreenState extends State<RoomScreen> {
                                 ),
                                 labelText: 'Add Score',
                                 labelStyle: TextStyle(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .primary),
+                                    color:
+                                        Theme.of(context).colorScheme.primary),
                                 enabledBorder: OutlineInputBorder(
                                   borderSide: BorderSide(
                                       color: Theme.of(context)
@@ -181,9 +208,7 @@ class RoomScreenState extends State<RoomScreen> {
                                 ),
                               ),
                               onSubmitted: (value) {
-                                setState(() {
-                                  
-                                });
+                                setState(() {});
                                 scoreController.clear();
                               },
                             ),

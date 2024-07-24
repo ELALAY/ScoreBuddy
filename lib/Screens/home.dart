@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:scorebuddy/Models/room_model.dart';
 import 'package:scorebuddy/Screens/home_drawer.dart';
+import 'package:scorebuddy/Screens/match_screen.dart';
 import 'package:scorebuddy/services/realtime_db/firebase_db.dart';
-import '../services/sqflite/database.dart';
 import '../services/auth/auth_service.dart';
 import 'new_game_screem.dart';
 import 'new_match_screen.dart';
@@ -178,7 +178,7 @@ class MyHomePageState extends State<MyHomePage> {
                           ),
                         ),
                         onTap: () {
-                          //navMatchScreen(room);
+                          navMatchScreen(room);
                         },
                       ),
                     ),
@@ -196,6 +196,12 @@ class MyHomePageState extends State<MyHomePage> {
           backgroundColor: Theme.of(context).colorScheme.primary,
           child: const Icon(Icons.add)),
     );
+  }
+
+  void navMatchScreen(Room room) {
+    Navigator.push(context, MaterialPageRoute(builder: (context) {
+      return RoomScreen(room: room);
+    }));
   }
 
   void createNewGameScreen() {

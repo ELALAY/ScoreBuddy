@@ -2,11 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:scorebuddy/Models/room_model.dart';
+import 'package:scorebuddy/Models/score_model.dart';
 import 'dart:async';
 
 import '../Models/game_model.dart';
 import '../Models/player_model.dart';
-import '../Models/score_model.dart';
 import '../services/realtime_db/firebase_db.dart';
 import '../services/sqflite/database.dart';
 import 'new_player_screen.dart';
@@ -91,6 +91,23 @@ class NewMatchState extends State<NewMatch> {
     } catch (e) {
       _showSnackBar(context, 'Error checking game name: $e');
       return false;
+    }
+  }
+
+  Future<String> fetchGameId(String name) async {
+    try {
+      return await firebaseDatabaseHelper.getRoomId(name);
+    } catch (e) {
+      _showSnackBar(context, 'Error checking game name: $e');
+      return '';
+    }
+  }
+
+  Future<void> createPlayerScore(PlayerScore playerScore) async {
+    try {
+       await firebaseDatabaseHelper.insertPlayerScore(playerScore);
+    } catch (e) {
+      _showSnackBar(context, 'Error inserting score of ${playerScore.playerName}: $e');
     }
   }
 
@@ -290,7 +307,16 @@ class NewMatchState extends State<NewMatch> {
                               targetScore: target,
                               isActive: true);
                           createRoom(roomTemp);
-                          
+
+                          for (Player player in allPlayers) {
+                            PlayerScore playerScore = PlayerScore(
+                                gameName: selectedGame.name,
+                                roomName: roomName,
+                                playerName: player.name,
+                                score: 0);
+                            createPlayerScore(playerScore);
+                          }
+
                           // ignore: use_build_context_synchronously
                           Navigator.pop(context);
                         } catch (e) {

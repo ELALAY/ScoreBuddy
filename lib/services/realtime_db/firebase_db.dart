@@ -77,7 +77,10 @@ class FirebaseDatabaseHelper {
   Future<void> deleteRoom(String roomName) async {
     try {
       // Query the document with the specified roomName
-      QuerySnapshot querySnapshot = await _db.collection('rooms').where('roomName', isEqualTo: roomName).get();
+      QuerySnapshot querySnapshot = await _db
+          .collection('rooms')
+          .where('roomName', isEqualTo: roomName)
+          .get();
 
       // Check if a matching document exists
       if (querySnapshot.docs.isNotEmpty) {
@@ -89,6 +92,31 @@ class FirebaseDatabaseHelper {
         debugPrint("Room deleted successfully");
       } else {
         debugPrint("No room found with the name: $roomName");
+      }
+    } catch (e) {
+      debugPrint("Error deleting room: $e");
+      rethrow;
+    }
+  }
+
+  Future<String> getRoomId(String roomName) async {
+    try {
+      // Query the document with the specified roomName
+      QuerySnapshot querySnapshot = await _db
+          .collection('rooms')
+          .where('roomName', isEqualTo: roomName)
+          .get();
+
+      // Check if a matching document exists
+      if (querySnapshot.docs.isNotEmpty) {
+        // Get the document ID
+        String documentId = querySnapshot.docs.first.id;
+
+        debugPrint(documentId);
+        return documentId;
+      } else {
+        debugPrint("No room found with the name: $roomName");
+        return '';
       }
     } catch (e) {
       debugPrint("Error deleting room: $e");
@@ -160,5 +188,69 @@ class FirebaseDatabaseHelper {
       debugPrint('Error fetching players: $e');
     }
     return players;
+  }
+
+//--------------------------------------------------------------------------------------
+//********  PlayerScores Functions**********/
+//--------------------------------------------------------------------------------------
+
+// Insert a new PlayerScore
+  Future<void> insertPlayerScore(PlayerScore playerScore) async {
+    try {
+      await _db.collection('playerScores').add(playerScore.toMap());
+      debugPrint("PlayerScore inserted successfully");
+    } catch (e) {
+      debugPrint("Error inserting PlayerScore: $e");
+      rethrow;
+    }
+  }
+
+  Future<void> updatePlayerScore(int roomId, int playerId, int newScore) async {
+    try {
+      QuerySnapshot querySnapshot = await _db
+          .collection('playerScores')
+          .where('roomId', isEqualTo: roomId)
+          .where('playerId', isEqualTo: playerId)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        String documentId = querySnapshot.docs.first.id;
+        await _db
+            .collection('playerScores')
+            .doc(documentId)
+            .update({'score': newScore});
+        debugPrint("Player score updated successfully");
+      } else {
+        debugPrint("No PlayerScore found with the given roomId and playerId");
+      }
+    } catch (e) {
+      debugPrint("Error updating player score: $e");
+      rethrow;
+    }
+  }
+
+  // Get all PlayerScores by roomName
+  Future<List<PlayerScore>> getAllPlayerScores(String roomName) async {
+    try {
+      // Step 2: Get all PlayerScores with the found roomId
+      QuerySnapshot playerScoresQuerySnapshot = await _db
+          .collection('playerScores')
+          .where('roomName', isEqualTo: roomName)
+          .get();
+      if (playerScoresQuerySnapshot.docs.isNotEmpty) {
+        // Convert query snapshots to List<PlayerScore>
+        List<PlayerScore> playerScores = playerScoresQuerySnapshot.docs
+            .map((doc) => PlayerScore.fromFirestore(doc))
+            .toList();
+
+        return playerScores;
+      } else {
+        debugPrint("No room found with the name: $roomName");
+        return [];
+      }
+    } catch (e) {
+      debugPrint("Error fetching PlayerScores: $e");
+      rethrow;
+    }
   }
 }
