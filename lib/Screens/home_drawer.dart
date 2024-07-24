@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:scorebuddy/Screens/new_friend_screen.dart';
 
 import '../services/auth/auth_service.dart';
 import '../services/realtime_db/firebase_db.dart';
@@ -22,6 +23,11 @@ class _MyHomeDrawerState extends State<MyHomeDrawer> {
     fetchUser();
   }
 
+  void navFriendsScreen() {
+    Navigator.push(context, MaterialPageRoute(builder: (context) {
+      return const AddFriendScreen();
+    }));
+  }
 
   void fetchUser() async {
     user = authService.getCurrenctuser();
@@ -76,20 +82,18 @@ class _MyHomeDrawerState extends State<MyHomeDrawer> {
             ),
             ListTile(
               leading: const Icon(Icons.person_add),
-              title: const Text('Add Friends'),
-              onTap: () {
-                Navigator.pop(context);
-              },
+              title: const Text('Friends'),
+              onTap: navFriendsScreen,              
             ),
             const Spacer(),
-            ListTile(
+            /*ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('Flush Sqflite DB'),
               onTap: () {
                 // Handle Sqflite DB flush here
                 Navigator.pop(context);
               },
-            ),
+            ),*/
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('Logout'),

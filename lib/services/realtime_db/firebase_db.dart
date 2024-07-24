@@ -253,4 +253,58 @@ class FirebaseDatabaseHelper {
       rethrow;
     }
   }
+
+//--------------------------------------------------------------------------------------
+//********  Friends Functions**********/
+//--------------------------------------------------------------------------------------
+
+
+// Adds a friend to the current user's friends list
+  Future<void> addFriend(String currentUserId, String friendId) async {
+    try {
+      // Add friend to current user's friends list
+      await _db.collection('users').doc(currentUserId).collection('friends').doc(friendId).set({
+        'friendId': friendId,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      // Add current user to friend's friends list
+      await _db.collection('users').doc(friendId).collection('friends').doc(currentUserId).set({
+        'friendId': currentUserId,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      debugPrint('Friend added successfully');
+    } catch (e) {
+      debugPrint('Error adding friend: $e');
+    }
+  }
+
+  // Removes a friend from the current user's friends list
+  Future<void> removeFriend(String currentUserId, String friendId) async {
+    try {
+      // Remove friend from current user's friends list
+      await _db.collection('users').doc(currentUserId).collection('friends').doc(friendId).delete();
+
+      // Remove current user from friend's friends list
+      await _db.collection('users').doc(friendId).collection('friends').doc(currentUserId).delete();
+
+      debugPrint('Friend removed successfully');
+    } catch (e) {
+      debugPrint('Error removing friend: $e');
+    }
+  }
+
+  // Retrieves a list of friends for a given user
+  Future<List<String>> getFriends(String userId) async {
+    try {
+      QuerySnapshot snapshot = await _db.collection('users').doc(userId).collection('friends').get();
+      List<String> friends = snapshot.docs.map((doc) => doc.id).toList();
+      return friends;
+    } catch (e) {
+      debugPrint('Error retrieving friends: $e');
+      return [];
+    }
+  }
+
 }
