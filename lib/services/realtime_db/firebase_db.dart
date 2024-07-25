@@ -179,6 +179,20 @@ class FirebaseDatabaseHelper {
     }
   }
 
+  Future<Map<String, dynamic>?> getPlayerProfile(String name) async {
+    try {
+      DocumentSnapshot<Map<String, dynamic>> snapshot = await _db.collection('players').doc(name).get();
+      if (snapshot.exists) {
+        return snapshot.data();
+      } else {
+        return null;
+      }
+    } catch (e) {
+      debugPrint('Error fetching player profile: $e');
+      return null;
+    }
+  }
+
   Future<List<Player>> getAllPlayers() async {
     List<Player> players = [];
     try {

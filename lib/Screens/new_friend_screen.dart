@@ -61,7 +61,7 @@ class _AddFriendScreenState extends State<AddFriendScreen>
     String friendName = _friendNameController.text.trim();
     if (friendName.isNotEmpty) {
       // Add friend by name logic
-      await fbdatabaseHelper.addFriend('Aymane', friendName);
+      await fbdatabaseHelper.addFriend(user!.uid, friendName);
       // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Friend $friendName added')),

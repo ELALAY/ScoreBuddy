@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 // ignore: depend_on_referenced_packages
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:scorebuddy/Models/room_model.dart';
-import 'package:scorebuddy/Screens/home_drawer.dart';
 import 'package:scorebuddy/Screens/match_screen.dart';
 import 'package:scorebuddy/services/realtime_db/firebase_db.dart';
-import '../services/auth/auth_service.dart';
-import 'new_game_screem.dart';
-import 'new_match_screen.dart';
+import '../../services/auth/auth_service.dart';
+import '../new_game_screem.dart';
+import '../new_match_screen.dart';
+import 'home_drawer.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});

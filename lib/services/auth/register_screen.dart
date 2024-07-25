@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import '../../Screens/profile_screen.dart';
 import 'login_register_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -42,10 +43,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
 
     try {
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
+      // ignore: use_build_context_synchronously
+      Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => UsernameScreen(user: userCredential.user),
+      ),
+    );
       // Navigate to another screen or show success message
     } on FirebaseAuthException catch (e) {
       setState(() {
