@@ -272,8 +272,7 @@ class FirebaseDatabaseHelper {
 //********  Friends Functions**********/
 //--------------------------------------------------------------------------------------
 
-
-// Adds a friend to the current user's friends list
+  // Adds a friend to the current user's friends list
   Future<void> addFriend(String username, String friendId) async {
     try {
       // Add friend to current user's friends list

@@ -105,9 +105,10 @@ class NewMatchState extends State<NewMatch> {
 
   Future<void> createPlayerScore(PlayerScore playerScore) async {
     try {
-       await firebaseDatabaseHelper.insertPlayerScore(playerScore);
+      await firebaseDatabaseHelper.insertPlayerScore(playerScore);
     } catch (e) {
-      _showSnackBar(context, 'Error inserting score of ${playerScore.playerName}: $e');
+      _showSnackBar(
+          context, 'Error inserting score of ${playerScore.playerName}: $e');
     }
   }
 
@@ -220,118 +221,40 @@ class NewMatchState extends State<NewMatch> {
                 ),
               ),
             ),
-            // Persons Dropdown
-            const SizedBox(height: 16.0),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Checkbox(
-                      value: _selectAll,
-                      onChanged: (value) {
-                        setState(() {
-                          _selectAll = value!;
-                          if (_selectAll) {
-                            selectedPlayers = List.from(allPlayers);
-                          } else {
-                            selectedPlayers.clear();
-                          }
-                        });
-                      },
-                    ),
-                    Text('Select All',
-                        style: TextStyle(
-                            color: Theme.of(context).colorScheme.primary)),
-                  ],
-                ),
-                IconButton(
-                    onPressed: () {
-                      Navigator.push(context,
-                          MaterialPageRoute(builder: (context) {
-                        return const NewPlayer();
-                      }));
-                    },
-                    icon: const Icon(
-                      Icons.person_add,
-                      color: Colors.white,
-                    )),
-              ],
-            ),
-            Text(
-              'Players selection',
-              style: TextStyle(color: Theme.of(context).colorScheme.primary),
-            ),
-            const SizedBox(height: 8.0),
-            Wrap(
-              spacing: 8.0,
-              children: allPlayers.map((Player player) {
-                return ChoiceChip(
-                  label: Text(player.name),
-                  selected: selectedPlayers.contains(player),
-                  selectedColor: Theme.of(context).colorScheme.primary,
-                  onSelected: (bool selected) {
-                    setState(() {
-                      if (selected) {
-                        selectedPlayers.add(player);
-                        if (selectedPlayers.length == allPlayers.length) {
-                          _selectAll = true;
-                        }
-                      } else {
-                        selectedPlayers.remove(player);
-                        _selectAll = false;
-                      }
-                    });
-                  },
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 16.0),
+
+            const SizedBox(height: 12.0),
+
             Center(
               child: ElevatedButton(
                 onPressed: () async {
-                  if (selectedPlayers.length >= 2) {
-                    if (roomNameController.text.trim().isNotEmpty ||
-                        targetScoreController.text.isNotEmpty) {
-                      Future<bool> exists =
-                          fbcheckingName(roomNameController.text.trim());
-                      // ignore: unrelated_type_equality_checks
-                      if (exists != false) {
-                        try {
-                          //get match name
-                          String roomName = roomNameController.text.trim();
-                          int target = int.parse(targetScoreController.text);
+                  if (roomNameController.text.trim().isNotEmpty ||
+                      targetScoreController.text.isNotEmpty) {
+                    Future<bool> exists =
+                        fbcheckingName(roomNameController.text.trim());
+                    // ignore: unrelated_type_equality_checks
+                    if (exists != false) {
+                      try {
+                        //get match name
+                        String roomName = roomNameController.text.trim();
+                        int target = int.parse(targetScoreController.text);
 
-                          Room roomTemp = Room(
-                              gameName: selectedGame.name,
-                              roomName: roomName,
-                              targetScore: target,
-                              isActive: true);
-                          createRoom(roomTemp);
+                        Room roomTemp = Room(
+                            gameName: selectedGame.name,
+                            roomName: roomName,
+                            targetScore: target,
+                            isActive: true);
+                        createRoom(roomTemp);
 
-                          for (Player player in allPlayers) {
-                            PlayerScore playerScore = PlayerScore(
-                                gameName: selectedGame.name,
-                                roomName: roomName,
-                                playerName: player.name,
-                                score: 0);
-                            createPlayerScore(playerScore);
-                          }
-
-                          // ignore: use_build_context_synchronously
-                          Navigator.pop(context);
-                        } catch (e) {
-                          _showSnackBar(context, 'Error');
-                        }
-                      } else {
-                        _showSnackBar(context, 'Room name already exits!');
+                        // ignore: use_build_context_synchronously
+                        Navigator.pop(context);
+                      } catch (e) {
+                        _showSnackBar(context, 'Error');
                       }
                     } else {
-                      _showSnackBar(context, 'all fileds should be filled');
+                      _showSnackBar(context, 'Room name already exits!');
                     }
                   } else {
-                    _showSnackBar(
-                        context, 'At least 2 players should be selected');
+                    _showSnackBar(context, 'all fileds should be filled');
                   }
                 },
                 child: const Text('Create Match'),

@@ -50,7 +50,7 @@ class _AddFriendScreenState extends State<AddFriendScreen>
 
   void fetchFriends() async {
     if (user != null) {
-      List<String> players = await fbdatabaseHelper.getFriends('Aymane');
+      List<String> players = await fbdatabaseHelper.getFriends(user!.uid);
       setState(() {
         friends = players;
       });
