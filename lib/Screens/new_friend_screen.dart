@@ -25,6 +25,7 @@ class _AddFriendScreenState extends State<AddFriendScreen>
 
   List<String> friends = [];
   User? user;
+  String scannedQrCode = '';
 
   @override
   void initState() {
@@ -65,9 +66,27 @@ class _AddFriendScreenState extends State<AddFriendScreen>
   }
 
   void navScanQrCode() {
-    Navigator.push(context, MaterialPageRoute(builder: (context) {
-      return const QRScannerScreen();
-    }));
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => QRScannerScreen(
+          onQRCodeScanned: (qrCode) {
+            setState(() {
+              if (qrCode.isNotEmpty) {
+                scannedQrCode = qrCode;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Friend $scannedQrCode Added!')),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Couldn't add friend")),
+                );
+              }
+            });
+          },
+        ),
+      ),
+    );
   }
 
   @override
@@ -168,9 +187,7 @@ class _AddFriendScreenState extends State<AddFriendScreen>
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) {
-            return const QRScannerScreen();
-          }));
+          navScanQrCode();
         },
         child: const Icon(Icons.qr_code_scanner),
       ),
