@@ -15,7 +15,7 @@ class GenerateQRCodeScreen extends StatelessWidget {
         data: dataToEncode,
         backgroundColor: Colors.black,
         // ignore: deprecated_member_use
-        foregroundColor: Colors.amber,
+        foregroundColor: Theme.of(context).colorScheme.primary,
       )),
     );
   }

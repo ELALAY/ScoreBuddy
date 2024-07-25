@@ -1,6 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:qr_flutter/qr_flutter.dart';
+import 'package:scorebuddy/Screens/QrCodeMger/scan_qr_code.dart';
 
 import '../services/auth/auth_service.dart';
 import '../services/realtime_db/firebase_db.dart';
@@ -16,19 +16,21 @@ class AddFriendScreen extends StatefulWidget {
 
 class _AddFriendScreenState extends State<AddFriendScreen>
     with SingleTickerProviderStateMixin {
-      FirebaseDatabaseHelper fbdatabaseHelper = FirebaseDatabaseHelper();
+  FirebaseDatabaseHelper fbdatabaseHelper = FirebaseDatabaseHelper();
   final authService = AuthService();
-  
+
   late TabController _tabController;
   final TextEditingController _friendNameController = TextEditingController();
   final TextEditingController _qrCodeDataController = TextEditingController();
 
+  List<String> friends = [];
   User? user;
 
   @override
   void initState() {
     super.initState();
     fetchUser();
+    fetchFriends();
     _tabController = TabController(length: 2, vsync: this);
   }
 
@@ -45,6 +47,13 @@ class _AddFriendScreenState extends State<AddFriendScreen>
     setState(() {});
   }
 
+  void fetchFriends() async {
+    List<String> players = await fbdatabaseHelper.getFriends(user!.uid);
+    setState(() {
+      friends = players;
+    });
+  }
+
   void _addFriendByName() {
     String friendName = _friendNameController.text.trim();
     if (friendName.isNotEmpty) {
@@ -55,17 +64,10 @@ class _AddFriendScreenState extends State<AddFriendScreen>
     }
   }
 
-  void _generateQRCode() {
-    showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-              title: const Text('Qr Code'),
-              content: SizedBox(
-                  height: 250,
-                  width: 250,
-                  child: GenerateQRCodeScreen(
-                      dataToEncode: _qrCodeDataController.text)),
-            ));
+  void navScanQrCode() {
+    Navigator.push(context, MaterialPageRoute(builder: (context) {
+      return const QRScannerScreen();
+    }));
   }
 
   @override
@@ -84,46 +86,93 @@ class _AddFriendScreenState extends State<AddFriendScreen>
       body: TabBarView(
         controller: _tabController,
         children: [
-          // Add by Name tab
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                TextField(
-                  controller: _friendNameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Friend Name',
-                    border: OutlineInputBorder(),
+          Column(children: [
+            // Add by Name tab
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  TextField(
+                    controller: _friendNameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Friend Name',
+                      border: OutlineInputBorder(),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: _addFriendByName,
-                  child: const Text('Add Friend'),
-                ),
-              ],
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: _addFriendByName,
+                    child: const Text('Add Friend'),
+                  ),
+                ],
+              ),
             ),
-          ),
+            friends.isEmpty
+                ? const Text('No friends to be displayed ...')
+                : Expanded(
+                    child: ListView.builder(
+                        itemBuilder: (BuildContext context, int index) {
+                      return Card(
+                        color: Theme.of(context).colorScheme.primary,
+                        elevation: 2.0,
+                        child: InkWell(
+                          child: Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      friends[index],
+                                      style: const TextStyle(
+                                        fontSize: 25,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          onTap: () {},
+                        ),
+                      );
+                    }),
+                  ),
+          ]),
           // Add by QR Code tab
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
                 Text('User Id: ${user!.uid}'),
-                const SizedBox(height: 20,),
+                const SizedBox(
+                  height: 20,
+                ),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Container(
-                    decoration: BoxDecoration(color: Colors.grey.shade700),
-                    height: 300,
-                    width: 300,
-                      child: GenerateQRCodeScreen(
-                          dataToEncode: user!.uid)),
+                      decoration: BoxDecoration(color: Colors.grey.shade700),
+                      height: 300,
+                      width: 300,
+                      child: GenerateQRCodeScreen(dataToEncode: user!.uid)),
                 ),
               ],
             ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) {
+            return const QRScannerScreen();
+          }));
+        },
+        child: const Icon(Icons.qr_code_scanner),
       ),
     );
   }
