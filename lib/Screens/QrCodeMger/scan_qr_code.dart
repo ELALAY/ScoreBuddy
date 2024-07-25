@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 
 class QRScannerScreen extends StatefulWidget {
-  const QRScannerScreen({super.key});
+  final Function(String) onQRCodeScanned;
+
+  const QRScannerScreen({super.key, required this.onQRCodeScanned});
 
   @override
   // ignore: library_private_types_in_public_api
@@ -62,6 +64,8 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
     controller.scannedDataStream.listen((scanData) {
       setState(() {
         result = scanData.code!;
+        widget.onQRCodeScanned(result);
+        Navigator.pop(context); // Go back to the previous screen
       });
     });
   }

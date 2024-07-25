@@ -43,22 +43,26 @@ class _AddFriendScreenState extends State<AddFriendScreen>
     super.dispose();
   }
 
-  void fetchUser() async {
+  void fetchUser() {
     user = authService.getCurrenctuser();
     setState(() {});
   }
 
   void fetchFriends() async {
-    List<String> players = await fbdatabaseHelper.getFriends(user!.uid);
-    setState(() {
-      friends = players;
-    });
+    if (user != null) {
+      List<String> players = await fbdatabaseHelper.getFriends('Aymane');
+      setState(() {
+        friends = players;
+      });
+    }
   }
 
-  void _addFriendByName() {
+  void _addFriendByName() async {
     String friendName = _friendNameController.text.trim();
     if (friendName.isNotEmpty) {
       // Add friend by name logic
+      await fbdatabaseHelper.addFriend('Aymane', friendName);
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Friend $friendName added')),
       );
@@ -105,80 +109,89 @@ class _AddFriendScreenState extends State<AddFriendScreen>
       body: TabBarView(
         controller: _tabController,
         children: [
-          Column(children: [
-            // Add by Name tab
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  TextField(
-                    controller: _friendNameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Friend Name',
-                      border: OutlineInputBorder(),
+          SingleChildScrollView(
+            child: Column(
+              children: [
+                // Add by Name tab
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      TextField(
+                        controller: _friendNameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Friend Name',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: _addFriendByName,
+                        child: const Text('Add Friend'),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20.0),
+                if (friends.isEmpty)
+                  const Text('No friends to be displayed ...')
+                else
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height - 300, // Adjust height as needed
+                    width: 370.0,
+                    child: ListView.builder(
+                      itemCount: friends.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        String friend = friends[index];
+                        return Card(
+                          color: Theme.of(context).colorScheme.primary,
+                          elevation: 2.0,
+                          child: InkWell(
+                            child: Padding(
+                              padding: const EdgeInsets.all(12.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        friend,
+                                        style: const TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            onTap: () {},
+                          ),
+                        );
+                      },
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: _addFriendByName,
-                    child: const Text('Add Friend'),
-                  ),
-                ],
-              ),
+              ],
             ),
-            friends.isEmpty
-                ? const Text('No friends to be displayed ...')
-                : Expanded(
-                    child: ListView.builder(
-                        itemBuilder: (BuildContext context, int index) {
-                      return Card(
-                        color: Theme.of(context).colorScheme.primary,
-                        elevation: 2.0,
-                        child: InkWell(
-                          child: Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      friends[index],
-                                      style: const TextStyle(
-                                        fontSize: 25,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                          onTap: () {},
-                        ),
-                      );
-                    }),
-                  ),
-          ]),
+          ),
           // Add by QR Code tab
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
-                Text('User Id: ${user!.uid}'),
-                const SizedBox(
-                  height: 20,
-                ),
+                if (user != null) Text('User Id: ${user!.uid}'),
+                const SizedBox(height: 20),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Container(
-                      decoration: BoxDecoration(color: Colors.grey.shade700),
-                      height: 300,
-                      width: 300,
-                      child: GenerateQRCodeScreen(dataToEncode: user!.uid)),
+                    decoration: BoxDecoration(color: Colors.grey.shade700),
+                    height: 300,
+                    width: 300,
+                    child: GenerateQRCodeScreen(dataToEncode: user?.uid ?? ''),
+                  ),
                 ),
               ],
             ),

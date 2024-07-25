@@ -260,17 +260,17 @@ class FirebaseDatabaseHelper {
 
 
 // Adds a friend to the current user's friends list
-  Future<void> addFriend(String currentUserId, String friendId) async {
+  Future<void> addFriend(String username, String friendId) async {
     try {
       // Add friend to current user's friends list
-      await _db.collection('users').doc(currentUserId).collection('friends').doc(friendId).set({
+      await _db.collection('users').doc(username).collection('friends').doc(friendId).set({
         'friendId': friendId,
         'timestamp': FieldValue.serverTimestamp(),
       });
 
       // Add current user to friend's friends list
-      await _db.collection('users').doc(friendId).collection('friends').doc(currentUserId).set({
-        'friendId': currentUserId,
+      await _db.collection('users').doc(friendId).collection('friends').doc(username).set({
+        'friendId': username,
         'timestamp': FieldValue.serverTimestamp(),
       });
 
@@ -296,9 +296,9 @@ class FirebaseDatabaseHelper {
   }
 
   // Retrieves a list of friends for a given user
-  Future<List<String>> getFriends(String userId) async {
+  Future<List<String>> getFriends(String name) async {
     try {
-      QuerySnapshot snapshot = await _db.collection('users').doc(userId).collection('friends').get();
+      QuerySnapshot snapshot = await _db.collection('users').doc(name).collection('friends').get();
       List<String> friends = snapshot.docs.map((doc) => doc.id).toList();
       return friends;
     } catch (e) {
