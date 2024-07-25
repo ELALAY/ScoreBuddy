@@ -162,15 +162,6 @@ class RoomScreenState extends State<RoomScreen>
                         ),
                       ),
                     ),
-                    /*DataColumn(
-                    label: Text(
-                      'Wins',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),*/
                   ],
                   rows: List<DataRow>.generate(
                     scores.length,
@@ -294,9 +285,9 @@ class RoomScreenState extends State<RoomScreen>
                             dataToEncode: widget.room.roomName),
                       ),
                     ),
-                    ElevatedButton(onPressed: (){}, child: const Text('Join Room!')),
                   ],
                 ),
+                    ElevatedButton(onPressed: (){}, child: const Text('Invite Friends!')),
               ],
             ),
           ),

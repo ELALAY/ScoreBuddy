@@ -181,7 +181,8 @@ class FirebaseDatabaseHelper {
 
   Future<Map<String, dynamic>?> getPlayerProfile(String name) async {
     try {
-      DocumentSnapshot<Map<String, dynamic>> snapshot = await _db.collection('players').doc(name).get();
+      DocumentSnapshot<Map<String, dynamic>> snapshot =
+          await _db.collection('players').doc(name).get();
       if (snapshot.exists) {
         return snapshot.data();
       } else {
@@ -204,11 +205,27 @@ class FirebaseDatabaseHelper {
     return players;
   }
 
+  Future<bool> joinRoom(String roomName, String playerName) async {
+    Room? room = await getRoom(roomName);
+    if (room != null) {
+      PlayerScore playerScore = PlayerScore(
+          gameName: room.gameName,
+          roomName: roomName,
+          playerName: playerName,
+          score: 0);
+      insertPlayerScore(playerScore);
+      return true;
+    } else {
+      debugPrint('Error joining Room');
+      return false;
+    }
+  }
+
 //--------------------------------------------------------------------------------------
 //********  PlayerScores Functions**********/
 //--------------------------------------------------------------------------------------
 
-// Insert a new PlayerScore
+  // Insert a new PlayerScore
   Future<void> insertPlayerScore(PlayerScore playerScore) async {
     try {
       await _db.collection('playerScores').add(playerScore.toMap());
@@ -219,7 +236,8 @@ class FirebaseDatabaseHelper {
     }
   }
 
-  Future<void> updatePlayerScore(String roomName, String playerName, int newScore) async {
+  Future<void> updatePlayerScore(
+      String roomName, String playerName, int newScore) async {
     try {
       QuerySnapshot querySnapshot = await _db
           .collection('playerScores')
@@ -276,13 +294,23 @@ class FirebaseDatabaseHelper {
   Future<void> addFriend(String username, String friendId) async {
     try {
       // Add friend to current user's friends list
-      await _db.collection('users').doc(username).collection('friends').doc(friendId).set({
+      await _db
+          .collection('users')
+          .doc(username)
+          .collection('friends')
+          .doc(friendId)
+          .set({
         'friendId': friendId,
         'timestamp': FieldValue.serverTimestamp(),
       });
 
       // Add current user to friend's friends list
-      await _db.collection('users').doc(friendId).collection('friends').doc(username).set({
+      await _db
+          .collection('users')
+          .doc(friendId)
+          .collection('friends')
+          .doc(username)
+          .set({
         'friendId': username,
         'timestamp': FieldValue.serverTimestamp(),
       });
@@ -297,10 +325,20 @@ class FirebaseDatabaseHelper {
   Future<void> removeFriend(String currentUserId, String friendId) async {
     try {
       // Remove friend from current user's friends list
-      await _db.collection('users').doc(currentUserId).collection('friends').doc(friendId).delete();
+      await _db
+          .collection('users')
+          .doc(currentUserId)
+          .collection('friends')
+          .doc(friendId)
+          .delete();
 
       // Remove current user from friend's friends list
-      await _db.collection('users').doc(friendId).collection('friends').doc(currentUserId).delete();
+      await _db
+          .collection('users')
+          .doc(friendId)
+          .collection('friends')
+          .doc(currentUserId)
+          .delete();
 
       debugPrint('Friend removed successfully');
     } catch (e) {
@@ -311,7 +349,8 @@ class FirebaseDatabaseHelper {
   // Retrieves a list of friends for a given user
   Future<List<String>> getFriends(String name) async {
     try {
-      QuerySnapshot snapshot = await _db.collection('users').doc(name).collection('friends').get();
+      QuerySnapshot snapshot =
+          await _db.collection('users').doc(name).collection('friends').get();
       List<String> friends = snapshot.docs.map((doc) => doc.id).toList();
       return friends;
     } catch (e) {
@@ -319,5 +358,4 @@ class FirebaseDatabaseHelper {
       return [];
     }
   }
-
 }
