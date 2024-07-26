@@ -7,7 +7,8 @@ import '../../services/auth/auth_service.dart';
 import '../../services/realtime_db/firebase_db.dart';
 
 class MyHomeDrawer extends StatefulWidget {
-  const MyHomeDrawer({super.key});
+  var context;
+   MyHomeDrawer({super.key, this.context});
 
   @override
   State<MyHomeDrawer> createState() => _MyHomeDrawerState();

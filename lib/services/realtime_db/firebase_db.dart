@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 
 import '../../Models/player_model.dart';
@@ -152,6 +153,7 @@ class FirebaseDatabaseHelper {
       return false;
     }
   }
+
 //--------------------------------------------------------------------------------------
 //********  Players Functions**********/
 //--------------------------------------------------------------------------------------
@@ -171,7 +173,7 @@ class FirebaseDatabaseHelper {
   Future<bool> checkingPlayerName(String name) async {
     try {
       QuerySnapshot querySnapshot =
-          await _db.collection('players').where('name', isEqualTo: name).get();
+          await _db.collection('players').where('username', isEqualTo: name).get();
       return querySnapshot.docs.isNotEmpty;
     } catch (e) {
       debugPrint('Error checking game name: $e');
@@ -216,7 +218,7 @@ class FirebaseDatabaseHelper {
       insertPlayerScore(playerScore);
       return true;
     } else {
-      debugPrint('Error joining Room');
+      debugPrint("Can't find joining Room");
       return false;
     }
   }
@@ -291,33 +293,32 @@ class FirebaseDatabaseHelper {
 //--------------------------------------------------------------------------------------
 
   // Adds a friend to the current user's friends list
-  Future<void> addFriend(String username, String friendId) async {
-    try {
-      // Add friend to current user's friends list
-      await _db
-          .collection('users')
-          .doc(username)
-          .collection('friends')
-          .doc(friendId)
-          .set({
-        'friendId': friendId,
-        'timestamp': FieldValue.serverTimestamp(),
-      });
+  Future<bool> addFriend(String currenUserId, String friendName) async {
+    QuerySnapshot querySnapshot =
+          await _db.collection('players').where('username', isEqualTo: friendName).get();
 
-      // Add current user to friend's friends list
-      await _db
-          .collection('users')
-          .doc(friendId)
-          .collection('friends')
-          .doc(username)
-          .set({
-        'friendId': username,
-        'timestamp': FieldValue.serverTimestamp(),
-      });
+    if (querySnapshot.docs.isNotEmpty) {
+      try {
+        // Add friend to current user's friends list
+        await _db
+            .collection('players')
+            .doc(currenUserId)
+            .collection('friends')
+            .doc(friendName)
+            .set({
+          'friendId': friendName,
+          'timestamp': FieldValue.serverTimestamp(),
+        });
 
-      debugPrint('Friend added successfully');
-    } catch (e) {
-      debugPrint('Error adding friend: $e');
+        debugPrint('Friend added successfully');
+        return true;
+      } catch (e) {
+        debugPrint('Error adding friend: $e');
+        return false;
+      }
+    } else {
+      debugPrint("Can't find Friend");
+      return false;
     }
   }
 
@@ -332,14 +333,6 @@ class FirebaseDatabaseHelper {
           .doc(friendId)
           .delete();
 
-      // Remove current user from friend's friends list
-      await _db
-          .collection('users')
-          .doc(friendId)
-          .collection('friends')
-          .doc(currentUserId)
-          .delete();
-
       debugPrint('Friend removed successfully');
     } catch (e) {
       debugPrint('Error removing friend: $e');
@@ -347,10 +340,13 @@ class FirebaseDatabaseHelper {
   }
 
   // Retrieves a list of friends for a given user
-  Future<List<String>> getFriends(String name) async {
+  Future<List<String>> getFriends(String username) async {
     try {
-      QuerySnapshot snapshot =
-          await _db.collection('users').doc(name).collection('friends').get();
+      QuerySnapshot snapshot = await _db
+          .collection('players')
+          .doc(username)
+          .collection('friends')
+          .get();
       List<String> friends = snapshot.docs.map((doc) => doc.id).toList();
       return friends;
     } catch (e) {

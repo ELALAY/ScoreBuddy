@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:scorebuddy/Models/player_model.dart';
 import 'package:scorebuddy/Screens/QrCodeMger/scan_qr_code.dart';
 
 import '../services/auth/auth_service.dart';
@@ -25,6 +27,8 @@ class _AddFriendScreenState extends State<AddFriendScreen>
 
   List<String> friends = [];
   User? user;
+  Map<String, dynamic>? playerProfile;
+  String? username = '';
   String scannedQrCode = '';
 
   @override
@@ -33,6 +37,7 @@ class _AddFriendScreenState extends State<AddFriendScreen>
     fetchUser();
     fetchFriends();
     _tabController = TabController(length: 2, vsync: this);
+    username = playerProfile?['username'] ?? 'No username';
   }
 
   @override
@@ -43,9 +48,17 @@ class _AddFriendScreenState extends State<AddFriendScreen>
     super.dispose();
   }
 
-  void fetchUser() {
+  void fetchUser() async {
+    Map<String, dynamic>? playerProfileTemp;
     user = authService.getCurrenctuser();
-    setState(() {});
+    if (user != null) {
+      playerProfileTemp = await fbdatabaseHelper.getPlayerProfile(user!.uid);
+    }
+    setState(() {
+      if (playerProfileTemp != null) {
+        playerProfile = playerProfileTemp;
+      }
+    });
   }
 
   void fetchFriends() async {
@@ -57,14 +70,27 @@ class _AddFriendScreenState extends State<AddFriendScreen>
     }
   }
 
-  void _addFriendByName() async {
-    String friendName = _friendNameController.text.trim();
+  void addFriend(String friendName) async {
     if (friendName.isNotEmpty) {
       // Add friend by name logic
-      await fbdatabaseHelper.addFriend(user!.uid, friendName);
+      bool added = await fbdatabaseHelper.addFriend(user!.uid, friendName);
+      // ignore: use_build_context_synchronously
+      if (added) {
+        // ignore: use_build_context_synchronously
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Friend $friendName added')),
+        );
+      } else {
+        // ignore: use_build_context_synchronously
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Friend Not added')),
+        );
+      }
+      fetchFriends();
+    } else {
       // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Friend $friendName added')),
+        const SnackBar(content: Text('Friend name invalid or Not Found!')),
       );
     }
   }
@@ -78,6 +104,7 @@ class _AddFriendScreenState extends State<AddFriendScreen>
             setState(() {
               if (qrCode.isNotEmpty) {
                 scannedQrCode = qrCode;
+                addFriend(scannedQrCode);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Friend $scannedQrCode Added!')),
                 );
@@ -126,7 +153,9 @@ class _AddFriendScreenState extends State<AddFriendScreen>
                       ),
                       const SizedBox(height: 20),
                       ElevatedButton(
-                        onPressed: _addFriendByName,
+                        onPressed: () {
+                          addFriend(_friendNameController.text.trim());
+                        },
                         child: const Text('Add Friend'),
                       ),
                     ],
@@ -137,7 +166,8 @@ class _AddFriendScreenState extends State<AddFriendScreen>
                   const Text('No friends to be displayed ...')
                 else
                   SizedBox(
-                    height: MediaQuery.of(context).size.height - 300, // Adjust height as needed
+                    height: MediaQuery.of(context).size.height -
+                        300, // Adjust height as needed
                     width: 370.0,
                     child: ListView.builder(
                       itemCount: friends.length,
@@ -153,7 +183,8 @@ class _AddFriendScreenState extends State<AddFriendScreen>
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(
                                         friend,
@@ -182,7 +213,22 @@ class _AddFriendScreenState extends State<AddFriendScreen>
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
-                if (user != null) Text('User Id: ${user!.uid}'),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      "User Id: ",
+                      style:
+                          TextStyle(fontSize: 15),
+                    ),
+                    if (user != null)
+                      Text(
+                        "${playerProfile?['username'] ?? 'No username'}",
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 20),
+                      ),
+                  ],
+                ),
                 const SizedBox(height: 20),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
@@ -190,7 +236,9 @@ class _AddFriendScreenState extends State<AddFriendScreen>
                     decoration: BoxDecoration(color: Colors.grey.shade700),
                     height: 300,
                     width: 300,
-                    child: GenerateQRCodeScreen(dataToEncode: user?.uid ?? ''),
+                    child: GenerateQRCodeScreen(
+                        dataToEncode:
+                            playerProfile?['username'] ?? 'No username'),
                   ),
                 ),
               ],

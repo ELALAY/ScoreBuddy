@@ -10,7 +10,6 @@ class NewGame extends StatefulWidget {
 }
 
 class _NewGameState extends State<NewGame> {
-  DatabaseHelper databaseHelper = DatabaseHelper.instance;  
   FirebaseDatabaseHelper firebaseDatabaseHelper = FirebaseDatabaseHelper();
 
   TextEditingController gameNameController = TextEditingController();

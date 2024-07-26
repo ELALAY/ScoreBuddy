@@ -22,13 +22,13 @@ class NewMatch extends StatefulWidget {
 
 class NewMatchState extends State<NewMatch>
     with SingleTickerProviderStateMixin {
-  DatabaseHelper databaseHelper = DatabaseHelper.instance;
   FirebaseFirestore fbdatabaseHelper = FirebaseFirestore.instance;
   FirebaseDatabaseHelper firebaseDatabaseHelper = FirebaseDatabaseHelper();
   final authService = AuthService();
 
   TextEditingController targetScoreController = TextEditingController();
   TextEditingController roomNameController = TextEditingController();
+  TextEditingController joinRoomFieldController = TextEditingController();
   late TabController _newRoomTabController;
   // ignore: avoid_init_to_null
   var selectedGame = null;
@@ -37,15 +37,13 @@ class NewMatchState extends State<NewMatch>
 
   User? user;
   Map<String, dynamic>? playerProfile;
-  Map<String, dynamic>? invitedFriendPlayerProfile;
-  String invitedFriendname = '';
 
   List<Player> selectedPlayers = [];
   List<Player> allPlayers = [];
   List<Game> allGames = [];
 
-  void joinRoom() async {
-    if (user != null && playerProfile != null) {
+  void joinRoombyQrCode() async {
+    if (user != null && playerProfile != null && scannedQrCode.isNotEmpty) {
       bool joined = firebaseDatabaseHelper.joinRoom(
           scannedQrCode, playerProfile!['username']) as bool;
       if (joined) {
@@ -58,13 +56,63 @@ class NewMatchState extends State<NewMatch>
     }
   }
 
-  void inviteFriend() async {
-    List<String> friendsList =  await firebaseDatabaseHelper.getFriends(playerProfile!['username']);
-  }
-
-  void fetchUserProfile(String name) async {
-    invitedFriendPlayerProfile =
-        await firebaseDatabaseHelper.getPlayerProfile(name);
+  Future<void> joinRoom() async {
+    showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+              title: const Text('Join Room'),
+              content: SizedBox(
+                height: 300.0,
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: joinRoomFieldController,
+                      keyboardType: const TextInputType.numberWithOptions(
+                          decimal: false, signed: false),
+                      decoration: InputDecoration(
+                        suffixIcon:
+                            const Icon(CupertinoIcons.gamecontroller),
+                        labelText: 'Room Name',
+                        labelStyle: const TextStyle(color: Colors.white),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.primary),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.primary),
+                        ),
+                        border: OutlineInputBorder(
+                          borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.primary),
+                        ),
+                        errorBorder: const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.red),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 25,),
+                    ElevatedButton(
+                        onPressed: () {
+                          if (joinRoomFieldController.text.isNotEmpty) {
+                            bool joined = firebaseDatabaseHelper.joinRoom(
+                                joinRoomFieldController.text,
+                                playerProfile!['username']) as bool;
+                            if (joined) {
+                              _showSnackBar(context,
+                                  'joined Room ${joinRoomFieldController.text} Successfully');
+                            } else {
+                              _showSnackBar(context, 'Error joining Room!');
+                            }
+                          } else {
+                            _showSnackBar(context, 'Room Name Required!');
+                          }
+                        },
+                        child: const Text('Join')),
+                  ],
+                ),
+              ),
+            ));
   }
 
   void fetchUser() async {
@@ -136,15 +184,6 @@ class NewMatchState extends State<NewMatch>
     }
   }
 
-  Future<String> fetchGameId(String name) async {
-    try {
-      return await firebaseDatabaseHelper.getRoomId(name);
-    } catch (e) {
-      _showSnackBar(context, 'Error checking game name: $e');
-      return '';
-    }
-  }
-
   Future<void> createPlayerScore(PlayerScore playerScore) async {
     try {
       await firebaseDatabaseHelper.insertPlayerScore(playerScore);
@@ -167,7 +206,7 @@ class NewMatchState extends State<NewMatch>
           controller: _newRoomTabController,
           tabs: const [
             Tab(text: 'Add by Name'),
-            Tab(text: 'My QrCode'),
+            Tab(text: 'Join Room'),
           ],
         ),
         iconTheme: const IconThemeData(color: Colors.white),
@@ -279,6 +318,7 @@ class NewMatchState extends State<NewMatch>
                         targetScoreController.text.isNotEmpty) {
                       Future<bool> exists =
                           fbcheckingName(roomNameController.text.trim());
+
                       // ignore: unrelated_type_equality_checks
                       if (exists != false) {
                         try {
@@ -293,10 +333,17 @@ class NewMatchState extends State<NewMatch>
                               isActive: true);
                           createRoom(roomTemp);
 
+                          /*PlayerScore userToAdd = PlayerScore(
+                              gameName: selectedGame.name,
+                              roomName: roomName,
+                              playerName: playerProfile!['name'],
+                              score: 0);*/
+                          //createPlayerScore(userToAdd);
+
                           // ignore: use_build_context_synchronously
                           Navigator.pop(context);
                         } catch (e) {
-                          _showSnackBar(context, 'Error');
+                          _showSnackBar(context, 'Error creating');
                         }
                       } else {
                         _showSnackBar(context, 'Room name already exits!');
@@ -336,7 +383,7 @@ class NewMatchState extends State<NewMatch>
                                     content:
                                         Text('joined Room $scannedQrCode')),
                               );
-                              joinRoom();
+                              joinRoombyQrCode();
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
@@ -351,8 +398,10 @@ class NewMatchState extends State<NewMatch>
                 ],
               ),
               ElevatedButton(
-                  onPressed: inviteFriend,
-                  child: const Text('Invite Friends!')),
+                  onPressed: () {
+                    joinRoom();
+                  },
+                  child: const Text('Join Room!')),
             ],
           ),
         ),

@@ -18,7 +18,6 @@ class RoomScreen extends StatefulWidget {
 
 class RoomScreenState extends State<RoomScreen>
     with SingleTickerProviderStateMixin {
-  DatabaseHelper databaseHelper = DatabaseHelper.instance;
   FirebaseFirestore fbdatabaseHelper = FirebaseFirestore.instance;
   FirebaseDatabaseHelper firebaseDatabaseHelper = FirebaseDatabaseHelper();
   TextEditingController gameNameController = TextEditingController();
