@@ -5,12 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:scorebuddy/Models/room_model.dart';
 import 'package:scorebuddy/Models/score_model.dart';
 import 'dart:async';
-
 import '../Models/game_model.dart';
 import '../Models/player_model.dart';
 import '../services/auth/auth_service.dart';
 import '../services/realtime_db/firebase_db.dart';
-import '../services/sqflite/database.dart';
 import 'QrCodeMger/scan_qr_code.dart';
 
 class NewMatch extends StatefulWidget {
@@ -43,7 +41,9 @@ class NewMatchState extends State<NewMatch>
   List<Game> allGames = [];
 
   void joinRoombyQrCode() async {
-    if (user != null && playerProfile != null && scannedQrCode.isNotEmpty) {
+    if (user != null && scannedQrCode.isNotEmpty) {
+      debugPrint(playerProfile!['username']);
+      debugPrint(scannedQrCode);
       bool joined = firebaseDatabaseHelper.joinRoom(
           scannedQrCode, playerProfile!['username']) as bool;
       if (joined) {
@@ -52,11 +52,11 @@ class NewMatchState extends State<NewMatch>
         _showSnackBar(context, 'Error joining Room!');
       }
     } else {
-      _showSnackBar(context, 'Error joining Room!');
+      _showSnackBar(context, 'Something is missing!');
     }
   }
 
-  Future<void> joinRoom() async {
+  Future<void> joinRoomName() async {
     showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -67,11 +67,8 @@ class NewMatchState extends State<NewMatch>
                   children: [
                     TextField(
                       controller: joinRoomFieldController,
-                      keyboardType: const TextInputType.numberWithOptions(
-                          decimal: false, signed: false),
                       decoration: InputDecoration(
-                        suffixIcon:
-                            const Icon(CupertinoIcons.gamecontroller),
+                        suffixIcon: const Icon(CupertinoIcons.gamecontroller),
                         labelText: 'Room Name',
                         labelStyle: const TextStyle(color: Colors.white),
                         enabledBorder: OutlineInputBorder(
@@ -91,18 +88,27 @@ class NewMatchState extends State<NewMatch>
                         ),
                       ),
                     ),
-                    const SizedBox(height: 25,),
+                    const SizedBox(
+                      height: 25,
+                    ),
                     ElevatedButton(
                         onPressed: () {
                           if (joinRoomFieldController.text.isNotEmpty) {
-                            bool joined = firebaseDatabaseHelper.joinRoom(
-                                joinRoomFieldController.text,
-                                playerProfile!['username']) as bool;
-                            if (joined) {
-                              _showSnackBar(context,
-                                  'joined Room ${joinRoomFieldController.text} Successfully');
+                            String name =
+                                playerProfile?['username'] ?? '';
+                            debugPrint(name);
+                            debugPrint(scannedQrCode);
+                            if (name.isNotEmpty) {
+                              Future<bool> joined = firebaseDatabaseHelper
+                                  .joinRoom(joinRoomFieldController.text, name) ;
+                              if (joined == true) {
+                                _showSnackBar(context,
+                                    'joined Room ${joinRoomFieldController.text} Successfully');
+                              } else {
+                                _showSnackBar(context, 'Error joining Room!');
+                              }
                             } else {
-                              _showSnackBar(context, 'Error joining Room!');
+                              _showSnackBar(context, "Can't find username!");
                             }
                           } else {
                             _showSnackBar(context, 'Room Name Required!');
@@ -126,6 +132,7 @@ class NewMatchState extends State<NewMatch>
   @override
   void initState() {
     super.initState();
+    fetchUser();
     fetchGames();
     fetchAllPlayers();
     _newRoomTabController = TabController(length: 2, vsync: this);
@@ -333,12 +340,12 @@ class NewMatchState extends State<NewMatch>
                               isActive: true);
                           createRoom(roomTemp);
 
-                          /*PlayerScore userToAdd = PlayerScore(
+                          PlayerScore userToAdd = PlayerScore(
                               gameName: selectedGame.name,
                               roomName: roomName,
-                              playerName: playerProfile!['name'],
-                              score: 0);*/
-                          //createPlayerScore(userToAdd);
+                              playerName: playerProfile?['username'],
+                              score: 0);
+                          createPlayerScore(userToAdd);
 
                           // ignore: use_build_context_synchronously
                           Navigator.pop(context);
@@ -358,51 +365,52 @@ class NewMatchState extends State<NewMatch>
             ],
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                children: [
-                  const Text('Join Room'),
-                  const SizedBox(height: 20),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Container(
-                      decoration: BoxDecoration(color: Colors.grey.shade700),
-                      height: 300,
-                      width: 300,
-                      child: QRScannerScreen(
-                        onQRCodeScanned: (qrCode) {
-                          setState(() {
-                            if (qrCode.isNotEmpty) {
-                              scannedQrCode = qrCode;
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                    content:
-                                        Text('joined Room $scannedQrCode')),
-                              );
-                              joinRoombyQrCode();
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text("Couldn't add friend")),
-                              );
-                            }
-                          });
-                        },
+        SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  children: [
+                    Text(playerProfile?['username'] ?? 'Na'),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Container(
+                        decoration: BoxDecoration(color: Colors.grey.shade700),
+                        height: 300,
+                        width: 300,
+                        child: QRScannerScreen(
+                          onQRCodeScanned: (qrCode) {
+                            setState(() {
+                              if (qrCode.isNotEmpty) {
+                                joinRoombyQrCode();
+                                scannedQrCode = qrCode;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content:
+                                          Text('joined Room $scannedQrCode')),
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text("Couldn't add friend")),
+                                );
+                              }
+                            });
+                          },
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-              ElevatedButton(
-                  onPressed: () {
-                    joinRoom();
-                  },
-                  child: const Text('Join Room!')),
-            ],
+                  ],
+                ),
+                ElevatedButton(
+                    onPressed: () {
+                      joinRoomName();
+                    },
+                    child: const Text('Join Room!')),
+              ],
+            ),
           ),
         ),
       ]),

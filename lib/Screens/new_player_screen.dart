@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../services/realtime_db/firebase_db.dart';
-import '../services/sqflite/database.dart';
 
 class NewPlayer extends StatefulWidget {
   const NewPlayer({super.key});

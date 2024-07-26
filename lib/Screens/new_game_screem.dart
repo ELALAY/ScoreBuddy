@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../services/sqflite/database.dart';
 import '../services/realtime_db/firebase_db.dart';
 
 class NewGame extends StatefulWidget {

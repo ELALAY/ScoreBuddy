@@ -1,7 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
-
 import '../../Models/player_model.dart';
 import '../../Models/room_model.dart';
 import '../../Models/score_model.dart';
@@ -209,6 +207,8 @@ class FirebaseDatabaseHelper {
 
   Future<bool> joinRoom(String roomName, String playerName) async {
     Room? room = await getRoom(roomName);
+    debugPrint(playerName);
+    debugPrint(roomName);
     if (room != null) {
       PlayerScore playerScore = PlayerScore(
           gameName: room.gameName,

@@ -5,7 +5,6 @@ import '../Models/player_model.dart';
 import '../Models/room_model.dart';
 import '../Models/score_model.dart';
 import '../services/realtime_db/firebase_db.dart';
-import '../services/sqflite/database.dart';
 import 'QrCodeMger/generate_qr_code.dart';
 
 class RoomScreen extends StatefulWidget {
