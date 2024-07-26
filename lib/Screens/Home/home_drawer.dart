@@ -1,14 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:scorebuddy/Screens/new_friend_screen.dart';
-
-import '../../Models/player_model.dart';
 import '../../services/auth/auth_service.dart';
 import '../../services/realtime_db/firebase_db.dart';
 
+// ignore: must_be_immutable
 class MyHomeDrawer extends StatefulWidget {
-  var context;
-   MyHomeDrawer({super.key, this.context});
+   const MyHomeDrawer({super.key});
 
   @override
   State<MyHomeDrawer> createState() => _MyHomeDrawerState();

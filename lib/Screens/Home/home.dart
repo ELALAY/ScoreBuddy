@@ -88,7 +88,7 @@ class MyHomePageState extends State<MyHomePage> {
               onPressed: logout),
         ],
       ),
-      drawer: MyHomeDrawer(context: context),
+      drawer: const MyHomeDrawer(),
       body: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
