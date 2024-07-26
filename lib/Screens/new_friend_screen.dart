@@ -1,7 +1,5 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:scorebuddy/Models/player_model.dart';
 import 'package:scorebuddy/Screens/QrCodeMger/scan_qr_code.dart';
 
 import '../services/auth/auth_service.dart';
@@ -108,6 +106,7 @@ class _AddFriendScreenState extends State<AddFriendScreen>
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Friend $scannedQrCode Added!')),
                 );
+                Navigator.pop(context);
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text("Couldn't add friend")),
@@ -218,8 +217,7 @@ class _AddFriendScreenState extends State<AddFriendScreen>
                   children: [
                     const Text(
                       "User Id: ",
-                      style:
-                          TextStyle(fontSize: 15),
+                      style: TextStyle(fontSize: 15),
                     ),
                     if (user != null)
                       Text(
