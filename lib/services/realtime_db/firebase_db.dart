@@ -35,7 +35,7 @@ class FirebaseDatabaseHelper {
   }
 
 //--------------------------------------------------------------------------------------
-//********  Players Functions**********/
+//********  Rooms Functions**********/
 //--------------------------------------------------------------------------------------
 
   Future<void> createRoom(Room newRoom) async {
@@ -237,6 +237,28 @@ class FirebaseDatabaseHelper {
       return false;
     }
   }
+
+  // Removes a friend from the current user's friends list
+  Future<void> removePlayerFromRoom(String roomName, String playerName) async {
+  try {
+    // Find the document(s) that match the given roomName and playerName
+    QuerySnapshot querySnapshot = await _db
+        .collection('playerScores')
+        .where('roomName', isEqualTo: roomName)
+        .where('playerName', isEqualTo: playerName)
+        .get();
+
+    // Delete each document found
+    for (var doc in querySnapshot.docs) {
+      await doc.reference.delete();
+    }
+
+    debugPrint('Player removed successfully from room $roomName');
+  } catch (e) {
+    debugPrint('Error removing player: $e');
+  }
+}
+
 
   Future<void> updatePlayerScore(
       String roomName, String playerName, int newScore) async {

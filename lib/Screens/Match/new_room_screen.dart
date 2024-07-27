@@ -39,20 +39,41 @@ class NewRoomState extends State<NewRoom> with SingleTickerProviderStateMixin {
   List<Player> allPlayers = [];
   List<Game> allGames = [];
 
-  void joinRoombyQrCode() async {
-    if (user != null && scannedQrCode.isNotEmpty) {
-      debugPrint(playerProfile!['username']);
-      debugPrint(scannedQrCode);
-      bool joined = firebaseDatabaseHelper.joinRoom(
-          scannedQrCode, playerProfile!['username']) as bool;
-      if (joined) {
-        _showSnackBar(context, 'joined Room $scannedQrCode Successfully');
-      } else {
-        _showSnackBar(context, 'Error joining Room!');
-      }
-    } else {
-      _showSnackBar(context, 'Something is missing!');
-    }
+  void joinRoombyQrCode() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => QRScannerScreen(
+          onQRCodeScanned: (qrCode) {
+            setState(() async {
+              if (qrCode.isNotEmpty) {
+                scannedQrCode = qrCode;
+                bool joined = await firebaseDatabaseHelper.joinRoom(
+                    scannedQrCode, playerProfile!['username']);
+                if (joined) {
+                  // ignore: use_build_context_synchronously
+                  _showSnackBar(
+                      context, 'joined Room $scannedQrCode Successfully');
+                } else {
+                  // ignore: use_build_context_synchronously
+                  _showSnackBar(context, 'Error joining Room!');
+                }
+                // ignore: use_build_context_synchronously
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Friend $scannedQrCode Added!')),
+                );
+                // ignore: use_build_context_synchronously
+                Navigator.pop(context);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Couldn't add friend")),
+                );
+              }
+            });
+          },
+        ),
+      ),
+    );
   }
 
   Future<void> joinRoomName() async {
@@ -91,14 +112,20 @@ class NewRoomState extends State<NewRoom> with SingleTickerProviderStateMixin {
                       height: 25,
                     ),
                     ElevatedButton(
-                        onPressed: () {
+                        onPressed: () async {
                           if (joinRoomFieldController.text.isNotEmpty) {
-                            String name = playerProfile?['username'] ?? '';
+                            String name = playerProfile?['username'];
                             debugPrint('joining: $name');
                             debugPrint(joinRoomFieldController.text.trim());
                             if (name.isNotEmpty) {
-                              firebaseDatabaseHelper.joinRoom(
+                              bool joined = await firebaseDatabaseHelper.joinRoom(
                                   joinRoomFieldController.text, name);
+                              // ignore: use_build_context_synchronously
+                              if(joined) {_showSnackBar(context, "Joined!");
+                              // ignore: use_build_context_synchronously
+                              } else {_showSnackBar(context, "Didn't join!");}
+                              // ignore: use_build_context_synchronously
+                              Navigator.pop(context);
                             } else {
                               _showSnackBar(context, "Can't find username!");
                             }
@@ -375,20 +402,7 @@ class NewRoomState extends State<NewRoom> with SingleTickerProviderStateMixin {
                         child: QRScannerScreen(
                           onQRCodeScanned: (qrCode) {
                             setState(() {
-                              if (qrCode.isNotEmpty) {
-                                joinRoombyQrCode();
-                                scannedQrCode = qrCode;
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                      content:
-                                          Text('joined Room $scannedQrCode')),
-                                );
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                      content: Text("Couldn't add friend")),
-                                );
-                              }
+                              joinRoombyQrCode();
                             });
                           },
                         ),

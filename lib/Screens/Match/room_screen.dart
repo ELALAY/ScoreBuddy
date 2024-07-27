@@ -28,7 +28,6 @@ class RoomScreenState extends State<RoomScreen>
 
   List<Player> friends = [];
   List<Player> selectedFriends = [];
-  var selectedPerson;
 
   @override
   void initState() {
@@ -336,6 +335,29 @@ class RoomScreenState extends State<RoomScreen>
                             width: 50,
                             child: IconButton(
                               onPressed: () {
+                                showDialog(context: context, builder: (context){
+                                  return AlertDialog(
+                                    title: Text(
+                                      'Remove ${score.playerName}'
+                                    ),
+                                    actions: [
+                                      ElevatedButton(onPressed: (){
+                                        firebaseDatabaseHelper.removePlayerFromRoom(score.roomName, score.playerName);
+                                      }, child: const Text('Remove'))
+                                    ],
+                                  );
+                                });
+                              },
+                              icon: const Icon(
+                                CupertinoIcons.minus_circle,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                          /*SizedBox(
+                            width: 50,
+                            child: IconButton(
+                              onPressed: () {
                                 setState(() {});
                                 updateScore(score, score.score + 51);
                                 reload();
@@ -345,7 +367,7 @@ class RoomScreenState extends State<RoomScreen>
                                 color: Colors.white,
                               ),
                             ),
-                          ),
+                          ),*/
                         ],
                       ),
                     );

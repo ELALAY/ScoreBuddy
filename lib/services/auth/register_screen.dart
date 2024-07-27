@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../Screens/Home/home.dart';
-import '../../Screens/profile_screen.dart';
 import '../realtime_db/firebase_db.dart';
 import 'auth_service.dart';
 import 'login_register_screen.dart';
@@ -109,8 +108,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
 
     try {
-      UserCredential userCredential =
-          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
