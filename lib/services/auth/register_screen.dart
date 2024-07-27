@@ -1,6 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import '../../Screens/Home/home.dart';
 import '../../Screens/profile_screen.dart';
+import '../realtime_db/firebase_db.dart';
+import 'auth_service.dart';
 import 'login_register_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -14,8 +18,70 @@ class _RegisterScreenState extends State<RegisterScreen> {
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   TextEditingController confirmPasswordController = TextEditingController();
+  TextEditingController usernameController = TextEditingController();
+  FirebaseDatabaseHelper fbdatabaseHelper = FirebaseDatabaseHelper();
+  final authService = AuthService();
 
   String errorMessage = '';
+
+  User? user;
+  Map<String, dynamic>? playerProfile;  
+
+  void fetchUser() async {
+    user = authService.getCurrenctuser();
+    if (user != null) {
+      playerProfile = await fbdatabaseHelper.getPlayerProfile(user!.uid);
+    }
+    setState(() {});
+  }
+
+
+  Future<void> saveUsername() async {
+    String username = usernameController.text.trim();
+    if (username.isEmpty) {
+      setState(() {
+        errorMessage = 'Username cannot be empty';
+      });
+      return;
+    }
+
+    // Check if the username is already taken
+    bool usernameExists = await checkUsernameAvailability(username);
+
+    if (usernameExists) {
+      setState(() {
+        errorMessage = 'Username is already taken';
+      });
+    } else {
+      // Save the username to Firestore
+      await FirebaseFirestore.instance
+          .collection('players')
+          .doc(user!.uid)
+          .set({
+        'username': username,
+        'email': user!.email,
+      });
+
+      // Navigate to the home page
+      // ignore: use_build_context_synchronously
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              const MyHomePage(), // Replace with your home page
+        ),
+      );
+    }
+  }
+
+  Future<bool> checkUsernameAvailability(String username) async {
+    final result = await FirebaseFirestore.instance
+        .collection('players')
+        .where('username', isEqualTo: username)
+        .get();
+
+    return result.docs.isNotEmpty;
+  }
 
   Future<void> register() async {
     if (passwordController.text != confirmPasswordController.text) {
@@ -43,17 +109,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
 
     try {
-      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      UserCredential userCredential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
+      user = authService.getCurrenctuser();
+      saveUsername();
       // ignore: use_build_context_synchronously
-      Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => UsernameScreen(user: userCredential.user),
-      ),
-    );
+      /*Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => UsernameScreen(user: userCredential.user),
+        ),
+      );*/
       // Navigate to another screen or show success message
     } on FirebaseAuthException catch (e) {
       setState(() {
@@ -111,6 +180,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             const SizedBox(
               height: 40,
+            ),
+            TextField(
+              controller: usernameController,
+              obscureText: false,
+              decoration: InputDecoration(
+                  label: const Text('Username'),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.primary),
+                  )),
+            ),
+            const SizedBox(
+              height: 10,
             ),
             TextField(
               controller: emailController,

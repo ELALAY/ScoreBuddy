@@ -207,16 +207,14 @@ class FirebaseDatabaseHelper {
 
   Future<bool> joinRoom(String roomName, String playerName) async {
     Room? room = await getRoom(roomName);
-    debugPrint(playerName);
-    debugPrint(roomName);
     if (room != null) {
       PlayerScore playerScore = PlayerScore(
           gameName: room.gameName,
-          roomName: roomName,
+          roomName: room.roomName,
           playerName: playerName,
           score: 0);
-      insertPlayerScore(playerScore);
-      return true;
+      bool inserted = await insertPlayerScore(playerScore);
+      return inserted;
     } else {
       debugPrint("Can't find joining Room");
       return false;

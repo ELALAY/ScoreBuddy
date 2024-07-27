@@ -94,8 +94,8 @@ class NewRoomState extends State<NewRoom> with SingleTickerProviderStateMixin {
                         onPressed: () {
                           if (joinRoomFieldController.text.isNotEmpty) {
                             String name = playerProfile?['username'] ?? '';
-                            debugPrint(name);
-                            debugPrint(scannedQrCode);
+                            debugPrint('joining: $name');
+                            debugPrint(joinRoomFieldController.text.trim());
                             if (name.isNotEmpty) {
                               firebaseDatabaseHelper.joinRoom(
                                   joinRoomFieldController.text, name);
