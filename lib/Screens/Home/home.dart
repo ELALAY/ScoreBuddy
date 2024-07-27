@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 // ignore: depend_on_referenced_packages
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:scorebuddy/Models/room_model.dart';
-import 'package:scorebuddy/Screens/match_screen.dart';
+import 'package:scorebuddy/Screens/Match/room_screen.dart';
 import 'package:scorebuddy/services/realtime_db/firebase_db.dart';
 import '../../services/auth/auth_service.dart';
 import '../new_game_screem.dart';
-import '../new_match_screen.dart';
+import '../Match/new_room_screen.dart';
 import 'home_drawer.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -212,7 +212,7 @@ class MyHomePageState extends State<MyHomePage> {
 
   void createNewMatchScreen() {
     Navigator.push(context, MaterialPageRoute(builder: (context) {
-      return const NewMatch();
+      return const NewRoom();
     })).then(
         (_) => fetchAllRooms()); // Refresh the list after creating a new match
   }

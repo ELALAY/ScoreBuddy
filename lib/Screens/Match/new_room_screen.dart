@@ -5,21 +5,20 @@ import 'package:flutter/material.dart';
 import 'package:scorebuddy/Models/room_model.dart';
 import 'package:scorebuddy/Models/score_model.dart';
 import 'dart:async';
-import '../Models/game_model.dart';
-import '../Models/player_model.dart';
-import '../services/auth/auth_service.dart';
-import '../services/realtime_db/firebase_db.dart';
-import 'QrCodeMger/scan_qr_code.dart';
+import '../../Models/game_model.dart';
+import '../../Models/player_model.dart';
+import '../../services/auth/auth_service.dart';
+import '../../services/realtime_db/firebase_db.dart';
+import '../QrCodeMger/scan_qr_code.dart';
 
-class NewMatch extends StatefulWidget {
-  const NewMatch({super.key});
+class NewRoom extends StatefulWidget {
+  const NewRoom({super.key});
 
   @override
-  NewMatchState createState() => NewMatchState();
+  NewRoomState createState() => NewRoomState();
 }
 
-class NewMatchState extends State<NewMatch>
-    with SingleTickerProviderStateMixin {
+class NewRoomState extends State<NewRoom> with SingleTickerProviderStateMixin {
   FirebaseFirestore fbdatabaseHelper = FirebaseFirestore.instance;
   FirebaseDatabaseHelper firebaseDatabaseHelper = FirebaseDatabaseHelper();
   final authService = AuthService();
@@ -94,19 +93,12 @@ class NewMatchState extends State<NewMatch>
                     ElevatedButton(
                         onPressed: () {
                           if (joinRoomFieldController.text.isNotEmpty) {
-                            String name =
-                                playerProfile?['username'] ?? '';
+                            String name = playerProfile?['username'] ?? '';
                             debugPrint(name);
                             debugPrint(scannedQrCode);
                             if (name.isNotEmpty) {
-                              Future<bool> joined = firebaseDatabaseHelper
-                                  .joinRoom(joinRoomFieldController.text, name) ;
-                              if (joined == true) {
-                                _showSnackBar(context,
-                                    'joined Room ${joinRoomFieldController.text} Successfully');
-                              } else {
-                                _showSnackBar(context, 'Error joining Room!');
-                              }
+                              firebaseDatabaseHelper.joinRoom(
+                                  joinRoomFieldController.text, name);
                             } else {
                               _showSnackBar(context, "Can't find username!");
                             }

@@ -1,11 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import '../Models/player_model.dart';
-import '../Models/room_model.dart';
-import '../Models/score_model.dart';
-import '../services/realtime_db/firebase_db.dart';
-import 'QrCodeMger/generate_qr_code.dart';
+import '../../Models/player_model.dart';
+import '../../Models/room_model.dart';
+import '../../Models/score_model.dart';
+import '../../services/realtime_db/firebase_db.dart';
+import '../QrCodeMger/generate_qr_code.dart';
 
 class RoomScreen extends StatefulWidget {
   final Room room;
@@ -20,14 +20,20 @@ class RoomScreenState extends State<RoomScreen>
   FirebaseFirestore fbdatabaseHelper = FirebaseFirestore.instance;
   FirebaseDatabaseHelper firebaseDatabaseHelper = FirebaseDatabaseHelper();
   TextEditingController gameNameController = TextEditingController();
+  TextEditingController friendController = TextEditingController();
   late TabController _roomTabController;
   List<Player> players = [];
   List<PlayerScore> scores = [];
   Map<int, int> playersWonGames = {};
 
+  List<Player> friends = [];
+  List<Player> selectedFriends = [];
+  var selectedPerson;
+
   @override
   void initState() {
     super.initState();
+    fetchUserFriends();
     fetchAllRoomScores();
     _roomTabController = TabController(length: 2, vsync: this);
   }
@@ -39,7 +45,94 @@ class RoomScreenState extends State<RoomScreen>
   }
 
   void reload() {
+    fetchUserFriends();
     fetchAllRoomScores();
+  }
+
+  Future<void> fetchUserFriends() async {
+    try {
+      List<Player> friendList = await firebaseDatabaseHelper.getAllPlayers();
+      setState(() {
+        friends = friendList;
+      });
+    } catch (e) {
+      debugPrint('Error fetching friends: $e');
+    }
+  }
+
+  Future<void> inviteFriends() async {
+    _showSnackBar(context, 'invite friends');
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Add Player'),
+              content: TextField(
+                controller: friendController,
+                decoration: InputDecoration(
+                  border: const OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black),
+                  ),
+                  labelText: 'Username',
+                  labelStyle:
+                      TextStyle(color: Theme.of(context).colorScheme.primary),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.primary),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.primary),
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  child: const Text('Cancel'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+                TextButton(
+                  child: const Text('Add'),
+                  onPressed: () async {
+                    if (friendController.text.isNotEmpty) {
+                      PlayerScore playerScore = PlayerScore(
+                          gameName: widget.room.gameName,
+                          roomName: widget.room.roomName,
+                          playerName: friendController.text,
+                          score: 0);
+                      bool exists = await firebaseDatabaseHelper
+                          .checkPlayerinRoom(playerScore);
+
+                      if (exists) {
+                        bool inserted = await firebaseDatabaseHelper
+                            .insertPlayerScore(playerScore);
+                        if (inserted) {
+                          // ignore: use_build_context_synchronously
+                          _showSnackBar(context, "user Doesn't exists");
+                        } else {
+                          // ignore: use_build_context_synchronously
+                          _showSnackBar(context, "user Doesn't exists");
+                        }
+                      } else {
+                        // ignore: use_build_context_synchronously
+                        _showSnackBar(context, "user Doesn't exists");
+                      }
+                      friendController.clear();
+                    } else {
+                      _showSnackBar(context, 'invalid input');
+                    }
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   void fetchAllRoomScores() async {
@@ -264,29 +357,35 @@ class RoomScreenState extends State<RoomScreen>
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  children: [
-                    Text('Room Name: ${widget.room.roomName}'),
-                    const SizedBox(height: 20),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Container(
-                        decoration: BoxDecoration(color: Colors.grey.shade700),
-                        height: 300,
-                        width: 300,
-                        child: GenerateQRCodeScreen(
-                            dataToEncode: widget.room.roomName),
-                      ),
+          SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const SizedBox(
+                    height: 20.0,
+                  ),
+                  Text('Room Name: ${widget.room.roomName}'),
+                  const SizedBox(height: 20),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Container(
+                      decoration: BoxDecoration(color: Colors.grey.shade700),
+                      height: 300,
+                      width: 300,
+                      child: GenerateQRCodeScreen(
+                          dataToEncode: widget.room.roomName),
                     ),
-                  ],
-                ),
-                    ElevatedButton(onPressed: (){}, child: const Text('Invite Friends!')),
-              ],
+                  ),
+                  const SizedBox(
+                    height: 100.0,
+                  ),
+                  ElevatedButton(
+                      onPressed: inviteFriends,
+                      child: const Text('Invite Friends!')),
+                ],
+              ),
             ),
           ),
         ]),

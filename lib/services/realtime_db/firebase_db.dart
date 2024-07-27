@@ -228,13 +228,15 @@ class FirebaseDatabaseHelper {
 //--------------------------------------------------------------------------------------
 
   // Insert a new PlayerScore
-  Future<void> insertPlayerScore(PlayerScore playerScore) async {
+  Future<bool> insertPlayerScore(PlayerScore playerScore) async {
+    
     try {
       await _db.collection('playerScores').add(playerScore.toMap());
       debugPrint("PlayerScore inserted successfully");
+      return true;
     } catch (e) {
       debugPrint("Error inserting PlayerScore: $e");
-      rethrow;
+      return false;
     }
   }
 
@@ -285,6 +287,39 @@ class FirebaseDatabaseHelper {
     } catch (e) {
       debugPrint("Error fetching PlayerScores: $e");
       rethrow;
+    }
+  }
+
+  // Get all PlayerScores by roomName
+  Future<bool> checkPlayerinRoom(PlayerScore  playerScore) async {
+    try {
+      // Step 2: Get all PlayerScores with the found roomId
+      QuerySnapshot playerScoresQuerySnapshot = await _db
+          .collection('playerScores')
+          .where('roomName', isEqualTo: playerScore.roomName)
+          .get();
+      if (playerScoresQuerySnapshot.docs.isNotEmpty) {
+        // Convert query snapshots to List<PlayerScore>
+        List<PlayerScore> playerScores = playerScoresQuerySnapshot.docs
+            .map((doc) => PlayerScore.fromFirestore(doc))
+            .toList();
+
+        bool exists = false;
+        for(PlayerScore score in playerScores){
+          if(score.playerName == playerScore.playerName){
+            exists = true;
+            return true;
+          }
+        }
+
+        return exists;
+      } else {
+        debugPrint("No player found with the name: ${playerScore.roomName}");
+        return false;
+      }
+    } catch (e) {
+      debugPrint("Error fetching PlayerScores: $e");
+      return false;
     }
   }
 
